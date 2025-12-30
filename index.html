@@ -41,11 +41,10 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
   // ===== 設定：ここだけあなたの値に合わせる =====
-  const LIFF_ID = "2008793146-jMVaCpQM"; // ←あなたのLIFF ID（最新のものに）
-  const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzbXwVw-ZOzGU8EhJfBVKkSMbzGQm9_x6mfokuw5lEulD4t4E95fFb_PjPSmu-eTiXB/exec";
+  const LIFF_ID = "2008793146-jMVaCpQM";
+  const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxNvKKyXNLP0n8iTkmUgxW2QheFi0HxYmb2dYbRhPataYN_uUTrb4XMg1mOIWoUkZWU/exec";
   // ===========================================
 
-  // 候補（必要に応じて調整）
   const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2020;
   const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
   const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
@@ -58,10 +57,7 @@
   const msgEl = document.getElementById('msg');
   const setMsg = (s)=> { msgEl.textContent = s || ''; };
 
-  function range(min,max){
-    const a=[]; for(let i=min;i<=max;i++) a.push(i);
-    return a;
-  }
+  function range(min,max){ const a=[]; for(let i=min;i<=max;i++) a.push(i); return a; }
   function fillSelect(el, values, placeholder){
     el.innerHTML = '';
     const o0 = document.createElement('option');
@@ -87,14 +83,11 @@
     setMsg('初期化中…');
     await liff.init({ liffId: LIFF_ID });
 
-    // ★ 未ログインならログインへ（ここで止める）
     if (!liff.isLoggedIn()){
-      // ここで login を呼ぶと、ログイン後にこのURLへ戻ってくる
       liff.login({ redirectUri: window.location.href });
       return;
     }
 
-    // ★ ログイン済みになってから初めてAPIを呼ぶ
     const p = await liff.getProfile();
     if (!p || !p.userId) {
       setMsg('ユーザー情報（userId）が取得できませんでした。LINEアプリ内で開いてください。');
@@ -110,7 +103,6 @@
       return;
     }
 
-    // 念のためログイン確認
     if (!liff.isLoggedIn()){
       setMsg('ログイン状態が確認できません。再ログインします。');
       liff.login({ redirectUri: window.location.href });
@@ -127,7 +119,7 @@
 
     setMsg('送信中…');
 
-    // ✅ CORSプリフライト回避：JSONではなく form-urlencoded で送る
+    // form-urlencoded
     const params = new URLSearchParams();
     params.set("type", "liff_submit");
     params.set("userId", userId);
@@ -136,10 +128,13 @@
     params.set("gradYear", String(gy));
     params.set("dept", dp);
 
+    // ★ここで Content-Type を明示（GAS側で e.parameter を安定させる）
     const res = await fetch(GAS_WEBAPP_URL, {
       method: "POST",
-      body: params
-      // headers を自分で付けない（付けるとプリフライトの原因になり得る）
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body: params.toString()
     });
 
     const text = await res.text();
@@ -152,14 +147,12 @@
     }
     if(data && data.ok){
       setMsg(data.message + '\nこの画面は閉じて構いません。');
-      // LINEアプリ内なら閉じる（任意）
       // if (liff.isInClient()) liff.closeWindow();
     }else{
       setMsg((data && data.message) ? data.message : ('登録に失敗しました。\n' + text));
     }
   }
 
-  // 起動
   initUi();
   initLiff().catch(e=>{
     setMsg('初期化に失敗しました。\n' + (e && e.message ? e.message : e));
