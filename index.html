@@ -3,46 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>卒業年度　登録</title>
+  <title>情報登録</title>
   <style>
-    body { font-family: sans-serif; margin: 16px; background-color: #f8f9fa; }
-    .box { max-width: 520px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    h2 { margin-top: 0; color: #333; font-size: 20px; border-bottom: 2px solid #00b900; padding-bottom: 8px; }
-    label { display: block; margin: 16px 0 6px; font-weight: 600; color: #444; }
-    select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; display: block; }
-    select { background-color: #fff; margin-bottom: 4px; }
-    button { margin-top: 24px; background-color: #00b900; color: #fff; border: none; font-weight: bold; cursor: pointer; }
-    button:disabled { background-color: #ccc; }
-    .msg { margin-top: 16px; white-space: pre-wrap; font-size: 14px; line-height: 1.4; padding: 10px; border-radius: 4px; background: #fff0f0; border: 1px solid #ffcccc; display: none; }
-    .status { margin-top: 10px; font-size: 12px; color: #666; }
+    body{font-family:sans-serif;margin:16px}
+    .box{max-width:520px;margin:0 auto}
+    label{display:block;margin:12px 0 6px;font-weight:600}
+    select,button{width:100%;padding:10px;font-size:16px}
+    button{margin-top:16px}
+    .msg{margin-top:12px;white-space:pre-wrap}
+    .small{color:#666;font-size:12px;margin-top:10px;line-height:1.4}
   </style>
 </head>
 <body>
 <div class="box">
   <h2>情報登録</h2>
-  
+  <div class="small">
+    生年月日ではなく「生年月（年・月）」「卒業年」「学科」を登録します。<br>
+    すべて選択して「登録」を押してください。
+  </div>
+
   <label for="by">生年</label>
-  <select id="by"><option value="">読み込み失敗</option></select>
+  <select id="by"></select>
 
   <label for="bm">生月</label>
-  <select id="bm"><option value="">読み込み失敗</option></select>
+  <select id="bm"></select>
 
   <label for="gy">卒業年</label>
-  <select id="gy"><option value="">読み込み失敗</option></select>
+  <select id="gy"></select>
 
   <label for="dp">学科</label>
-  <select id="dp"><option value="">読み込み失敗</option></select>
+  <select id="dp"></select>
 
   <button id="btn" type="button">登録</button>
-  <div id="status" class="status">システム起動中...</div>
   <div id="msg" class="msg"></div>
 </div>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  // ===== 設定確認 =====
-  const LIFF_ID = "2008793146-jMVaCpQM"; 
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbyqJnJUCYWNb1X8a-5R52VdK6jC3aKo8FY_mg33u_-Td1cN4gi311G0rZfvJjaldzMu/exec";
+  // ===== 設定（必ずあなたの値に差し替え）=====
+  const LIFF_ID = "2008793146-jMVaCpQM";
+  const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby0qdVt6xU0t38dP79MT5iqAzeoaDXkbkkJBNckENRIuMOkUKgJf-AbZTrLVNWlKAUy/exec";
+  // ============================================
+
+  const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2025;
+  const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
+  const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
 
   const byEl = document.getElementById('by');
   const bmEl = document.getElementById('bm');
@@ -50,94 +55,110 @@
   const dpEl = document.getElementById('dp');
   const btn  = document.getElementById('btn');
   const msgEl = document.getElementById('msg');
-  const stEl  = document.getElementById('status');
+  const setMsg = (s)=> { msgEl.textContent = s || ''; };
 
-  function showError(m) {
-    msgEl.style.display = 'block';
-    msgEl.textContent = m;
+  function range(min,max){ const a=[]; for(let i=min;i<=max;i++) a.push(i); return a; }
+  function fillSelect(el, values){
+    el.innerHTML = '<option value="">選択してください</option>';
+    values.forEach(v=>{
+      const o=document.createElement('option');
+      o.value=String(v); o.textContent=String(v);
+      el.appendChild(o);
+    });
   }
 
-  // 1. まずUIを何があっても作る
-  function initUi() {
-    try {
-      const range = (min, max) => Array.from({length: max - min + 1}, (_, i) => min + i);
-      const fill = (el, vals) => {
-        el.innerHTML = '<option value="">選択してください</option>';
-        vals.forEach(v => {
-          const o = document.createElement('option');
-          o.value = v; o.textContent = v;
-          el.appendChild(o);
-        });
-      };
-      fill(byEl, range(1960, 2025));
-      fill(bmEl, range(1, 12));
-      fill(gyEl, range(2010, 2035));
-      fill(dpEl, ["理数科", "国際コミュニケーション学科", "普通科"]);
-      stEl.textContent = "UI準備完了。LINE認証を開始します...";
-    } catch(e) {
-      showError("UI作成エラー: " + e.message);
-    }
+  function initUi(){
+    fillSelect(byEl, range(BIRTH_YEAR_MIN,BIRTH_YEAR_MAX));
+    fillSelect(bmEl, range(1,12));
+    fillSelect(gyEl, range(GRAD_YEAR_MIN,GRAD_YEAR_MAX));
+    fillSelect(dpEl, DEPTS);
   }
 
-  // 2. LINE初期化
-  async function initLiff() {
-    if (!LIFF_ID) {
-      showError("LIFF_IDが設定されていません。");
-      return;
-    }
-    try {
+  async function initLiff(){
+    try{
+      setMsg('初期化中…');
       await liff.init({ liffId: LIFF_ID });
-      stEl.textContent = "LINE認証中...";
-      if (!liff.isLoggedIn()) {
+
+      if (!liff.isLoggedIn()){
         liff.login({ redirectUri: window.location.href });
         return;
       }
-      stEl.textContent = "ログイン完了。入力してください。";
-      stEl.style.color = "green";
-    } catch (e) {
-      showError("LIFF初期化エラー: " + e.code + "\n" + e.message + "\n\n【確認事項】\n・LIFF IDは正しいですか？\n・DevelopersのEndpoint URLと今のURLは一致していますか？");
+
+      // profile scopeが必要
+      const p = await liff.getProfile();
+      if (!p || !p.userId){
+        setMsg('userIdが取得できませんでした。LINEアプリ内で開いてください。');
+        return;
+      }
+      setMsg('準備完了：入力して登録してください。');
+    }catch(e){
+      setMsg('初期化に失敗しました。\n' + (e?.message ?? e));
     }
   }
 
-  // 3. 送信処理
-  btn.onclick = async () => {
-    const val = { by:byEl.value, bm:bmEl.value, gy:gyEl.value, dp:dpEl.value };
-    if (!val.by || !val.bm || !val.gy || !val.dp) {
-      alert("すべて選択してください"); return;
+  async function submit(){
+    const by = byEl.value, bm = bmEl.value, gy = gyEl.value, dp = dpEl.value;
+    if(!by || !bm || !gy || !dp){
+      setMsg('生年・生月・卒業年・学科をすべて選択してください。');
+      return;
     }
-    
-    stEl.textContent = "送信中...";
-    try {
+
+    try{
+      btn.disabled = true;
+      setMsg('送信中…');
+
       const profile = await liff.getProfile();
-      const p = new URLSearchParams();
-      p.set("type", "liff_submit");
-      p.set("userId", profile.userId);
-      p.set("birthYear", val.by);
-      p.set("birthMonth", val.bm);
-      p.set("gradYear", val.gy);
-      p.set("dept", val.dp);
-
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        body: p
-      });
-      const resText = await res.text();
-      const resJson = JSON.parse(resText);
-      
-      if (resJson.ok) {
-        alert("登録成功！\n" + resJson.message);
-        liff.closeWindow();
-      } else {
-        showError("保存失敗: " + resJson.message);
+      const userId = profile?.userId || '';
+      if(!userId){
+        setMsg('userIdが取得できませんでした。LINEアプリ内で開いてください。');
+        btn.disabled = false;
+        return;
       }
-    } catch (e) {
-      showError("送信エラー: " + e.message);
-    }
-  };
 
-  // 実行
+      // form-urlencoded（CORSプリフライト回避）
+      const params = new URLSearchParams();
+      params.set('type','liff_submit');
+      params.set('userId', userId);
+      params.set('birthYear', by);
+      params.set('birthMonth', bm);
+      params.set('gradYear', gy);
+      params.set('dept', dp);
+
+      const res = await fetch(GAS_WEBAPP_URL, {
+        method: 'POST',
+        body: params
+        // Content-Typeヘッダは付けない（ブラウザが適切に付ける）
+      });
+
+      const raw = await res.text();
+
+      // ★ ここが重要：JSONでなければ「そのまま表示」して原因を見える化
+      let data = null;
+      try { data = JSON.parse(raw); } catch (_) {}
+
+      if (!data){
+        setMsg('JSONではない応答が返りました（=GAS側判定ミス）。\n\n' + raw);
+        btn.disabled = false;
+        return;
+      }
+
+      if (data.ok){
+        setMsg(data.message + '\nこの画面は閉じて構いません。');
+        // if (liff.isInClient()) liff.closeWindow();
+      } else {
+        setMsg('登録に失敗しました：' + data.message);
+        btn.disabled = false;
+      }
+
+    }catch(e){
+      setMsg('通信エラー：\n' + (e?.message ?? e));
+      btn.disabled = false;
+    }
+  }
+
   initUi();
   initLiff();
+  btn.addEventListener('click', submit);
 </script>
 </body>
 </html>
