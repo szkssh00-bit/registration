@@ -9,11 +9,11 @@
     .box { max-width: 520px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     h2 { margin-top: 0; color: #333; font-size: 20px; border-bottom: 2px solid #00b900; padding-bottom: 8px; }
     label { display: block; margin: 16px 0 6px; font-weight: 600; color: #444; }
-    select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
-    select { background-color: #fff; }
+    select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; display: block; }
+    select { background-color: #fff; cursor: pointer; }
     button { margin-top: 24px; background-color: #00b900; color: #fff; border: none; font-weight: bold; cursor: pointer; }
-    button:active { background-color: #009900; }
-    .msg { margin-top: 16px; white-space: pre-wrap; font-size: 14px; color: #d9534f; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
+    .msg { margin-top: 16px; white-space: pre-wrap; font-size: 14px; line-height: 1.4; }
     .small { color: #666; font-size: 13px; margin-top: 10px; line-height: 1.5; background: #f0f0f0; padding: 10px; border-radius: 4px; }
   </style>
 </head>
@@ -26,16 +26,16 @@
   </div>
 
   <label for="by">生年</label>
-  <select id="by"></select>
+  <select id="by"><option value="">読み込み中...</option></select>
 
   <label for="bm">生月</label>
-  <select id="bm"></select>
+  <select id="bm"><option value="">読み込み中...</option></select>
 
   <label for="gy">卒業年</label>
-  <select id="gy"></select>
+  <select id="gy"><option value="">読み込み中...</option></select>
 
   <label for="dp">学科</label>
-  <select id="dp"></select>
+  <select id="dp"><option value="">読み込み中...</option></select>
 
   <button id="btn" type="button">登録</button>
   <div id="msg" class="msg"></div>
@@ -48,7 +48,7 @@
   const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzpnisve2CmJD_YzW69rbab_r-sBgmoe_IC9WEdD48fM4WH818pW5L4ztehMuknc72f/exec";
   // =================================================
 
-  const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2020;
+  const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2025;
   const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
   const DEPTS = ["理数科", "国際コミュニケーション学科", "普通科"];
 
@@ -64,19 +64,20 @@
     msgEl.style.color = color;
   };
 
-  // UI生成
-  function range(min, max) { const a = []; for (let i = min; i <= max; i++) a.push(i); return a; }
-  function fillSelect(el, values, placeholder) {
-    el.innerHTML = `<option value="">${placeholder}</option>`;
-    values.forEach(v => {
-      const o = document.createElement('option');
-      o.value = String(v);
-      o.textContent = String(v);
-      el.appendChild(o);
-    });
-  }
-
+  // UI（プルダウン）を生成する関数
   function initUi() {
+    const range = (min, max) => Array.from({length: max - min + 1}, (_, i) => min + i);
+    
+    const fillSelect = (el, values, placeholder) => {
+      el.innerHTML = `<option value="">${placeholder}</option>`;
+      values.forEach(v => {
+        const o = document.createElement('option');
+        o.value = String(v);
+        o.textContent = String(v);
+        el.appendChild(o);
+      });
+    };
+
     fillSelect(byEl, range(BIRTH_YEAR_MIN, BIRTH_YEAR_MAX), '選択してください');
     fillSelect(bmEl, range(1, 12), '選択してください');
     fillSelect(gyEl, range(GRAD_YEAR_MIN, GRAD_YEAR_MAX), '選択してください');
@@ -85,7 +86,7 @@
 
   // LIFF初期化
   async function initLiff() {
-    setMsg('初期化中…', '#666');
+    setMsg('LINEログイン確認中...', '#666');
     try {
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) {
@@ -94,20 +95,20 @@
       }
       setMsg('準備完了：入力して登録してください。', '#28a745');
     } catch (e) {
-      setMsg('LIFF初期化失敗: ' + e.message);
+      setMsg('LIFF初期化失敗: ' + e.message + '\nLINEアプリで開いているか確認してください。');
     }
   }
 
-  // データ送信
+  // 送信処理
   async function submit() {
     const by = byEl.value, bm = bmEl.value, gy = gyEl.value, dp = dpEl.value;
-    
     if (!by || !bm || !gy || !dp) {
       setMsg('すべての項目を選択してください。');
       return;
     }
 
-    setMsg('送信中…', '#666');
+    setMsg('送信中...', '#666');
+    btn.disabled = true;
 
     try {
       const profile = await liff.getProfile();
@@ -129,31 +130,32 @@
       });
 
       const text = await res.text();
-      console.log("Response:", text);
-
       let data;
       try {
         data = JSON.parse(text);
       } catch (e) {
-        setMsg('サーバからの応答が不正です。\n' + text);
+        setMsg('サーバ応答エラー(JSON外):\n' + text);
+        btn.disabled = false;
         return;
       }
 
-      if (res.ok && data.ok) {
-        setMsg(data.message + '\nこの画面を閉じてトーク画面に戻ってください。', '#28a745');
-        btn.disabled = true;
-        btn.style.backgroundColor = '#ccc';
+      if (data.ok) {
+        setMsg('【登録完了】\n' + data.message + '\nこの画面を閉じてトークに戻ってください。', '#28a745');
       } else {
-        setMsg('登録失敗: ' + (data.message || text));
+        setMsg('登録失敗: ' + data.message);
+        btn.disabled = false;
       }
     } catch (e) {
-      setMsg('通信エラーが発生しました。\n' + e.message);
+      setMsg('通信エラー: ' + e.message);
+      btn.disabled = false;
     }
   }
 
-  // 開始
-  initUi();
-  initLiff();
+  // 実行：ドキュメントが読み込まれたらUIを先に作る
+  document.addEventListener('DOMContentLoaded', () => {
+    initUi();   // 1. プルダウンを即座に作成
+    initLiff(); // 2. その後でLINEの認証を開始
+  });
 
   btn.addEventListener('click', submit);
 </script>
