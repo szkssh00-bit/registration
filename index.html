@@ -6,201 +6,286 @@
   <title>情報登録</title>
   <style>
     :root{
-      --line:#00b900; --bg:#f6f7f8; --card:#fff; --text:#1f2937; --muted:#6b7280; --bd:#e5e7eb;
-      --ok:#10b981; --warn:#f59e0b; --err:#ef4444;
-      --okbg:#ecfdf5; --warnbg:#fffbeb; --errbg:#fff1f2;
-      --okbd:#a7f3d0; --warnbd:#fde68a; --errbd:#fecdd3;
-      --r:14px; --sh:0 8px 24px rgba(0,0,0,.06);
+      --line:#00b900;
+      --bg:#f6f7f9;
+      --card:#ffffff;
+      --text:#222;
+      --muted:#666;
+      --border:#e5e7eb;
+      --danger:#b91c1c;
+      --ok:#166534;
     }
-    *{box-sizing:border-box}
-    body{margin:0;padding:18px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{max-width:560px;margin:0 auto}
-    .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);padding:18px}
-    .head{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd);padding-bottom:10px}
-    .badge{width:12px;height:12px;border-radius:999px;background:var(--line);box-shadow:0 0 0 4px rgba(0,185,0,.12)}
-    h1{margin:0;font-size:18px;letter-spacing:.02em}
-    .desc{margin:10px 0 14px;color:var(--muted);font-size:13px;line-height:1.55}
-    label{display:block;margin:14px 0 6px;font-weight:650;font-size:13px;color:#374151}
-    select{width:100%;padding:12px;font-size:16px;border-radius:12px;border:1px solid var(--bd);background:#fff;outline:none}
-    select:focus{border-color:rgba(0,185,0,.5);box-shadow:0 0 0 4px rgba(0,185,0,.12)}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:520px){.row{grid-template-columns:1fr}}
-    button{width:100%;margin-top:16px;padding:13px;border:none;border-radius:12px;background:var(--line);color:#fff;font-weight:700;font-size:16px;cursor:pointer}
-    button:disabled{opacity:.55;cursor:not-allowed}
-    .status{margin-top:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
-    .dot{width:8px;height:8px;border-radius:999px;background:#9ca3af}
-    .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.err{background:var(--err)}
-    .msg{margin-top:12px;padding:12px;border-radius:12px;border:1px solid var(--bd);font-size:13px;line-height:1.5;white-space:pre-wrap;display:none}
-    .msg.ok{display:block;background:var(--okbg);border-color:var(--okbd)}
-    .msg.warn{display:block;background:var(--warnbg);border-color:var(--warnbd)}
-    .msg.err{display:block;background:var(--errbg);border-color:var(--errbd)}
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap{
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 18px 14px 28px;
+    }
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 18px 16px 16px;
+    }
+    h1{
+      font-size: 18px;
+      margin: 0 0 10px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--line);
+    }
+    .note{
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+    }
+    label{
+      display:block;
+      font-weight: 650;
+      margin: 14px 0 6px;
+      font-size: 14px;
+    }
+    select{
+      width: 100%;
+      padding: 12px 12px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      box-sizing: border-box;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .btn{
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: none;
+      background: var(--line);
+      color: #fff;
+      font-weight: 750;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:disabled{
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .status{
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .status.ok{ color: var(--ok); }
+    .status.ng{ color: var(--danger); }
+    .footer{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <div class="head"><span class="badge"></span><h1>情報登録</h1></div>
-    <div class="desc">生年月日ではなく、生年月（年・月）・卒業年・学科を登録します。</div>
+  <div class="wrap">
+    <div class="card">
+      <h1>情報登録</h1>
 
-    <div class="row">
-      <div>
-        <label for="by">生年</label>
-        <select id="by"></select>
+      <div class="note">
+        生年月日ではなく、<b>生年月（年・月）</b>、<b>卒業年</b>、<b>学科</b>を登録します。<br>
+        すべて選択して「登録」を押してください。
       </div>
-      <div>
-        <label for="bm">生月</label>
-        <select id="bm"></select>
+
+      <label for="by">生年</label>
+      <select id="by"></select>
+
+      <label for="bm">生月</label>
+      <select id="bm"></select>
+
+      <label for="gy">卒業年</label>
+      <select id="gy"></select>
+
+      <label for="dp">学科</label>
+      <select id="dp"></select>
+
+      <button id="btn" class="btn" type="button">登録</button>
+
+      <div id="status" class="status">起動中…</div>
+      <div class="footer">
+        ※ LINEアプリ内（LIFF）で開いてください。ブラウザ単体では userId を取得できません。
       </div>
     </div>
-
-    <label for="gy">卒業年</label>
-    <select id="gy"></select>
-
-    <label for="dp">学科</label>
-    <select id="dp"></select>
-
-    <button id="btn" type="button">登録</button>
-
-    <div class="status"><span id="dot" class="dot"></span><span id="st">起動中…</span></div>
-    <div id="msg" class="msg"></div>
   </div>
-</div>
 
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script>
-  // ===== 必須：あなたの値 =====
-  const LIFF_ID = "2008793146-jMVaCpQM";
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxJwr4TtbF1l6i2dWoYz67Kk3w0hqQz-Kyp-zm1-wvtDN-i0_sxp623qIuv5ipNaCqK/exec";
-  // ===========================
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    // ======= 必須設定（差し替え）=======
+    const LIFF_ID = "2008793146-jMVaCpQM";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz9jVIVgIz-yD_WVJTXefxA7yija9lE1tNHY2pP9xZuv9K9KYp9sIR_1VJ_EadQiOV43g/exec";
+    // ==================================
 
-  const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2025;
-  const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
-  const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
+    // 候補範囲（必要に応じて変更）
+    const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2025;
+    const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
+    const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
 
-  const byEl = document.getElementById('by');
-  const bmEl = document.getElementById('bm');
-  const gyEl = document.getElementById('gy');
-  const dpEl = document.getElementById('dp');
-  const btn  = document.getElementById('btn');
-  const msgEl= document.getElementById('msg');
-  const stEl = document.getElementById('st');
-  const dot  = document.getElementById('dot');
+    const byEl = document.getElementById("by");
+    const bmEl = document.getElementById("bm");
+    const gyEl = document.getElementById("gy");
+    const dpEl = document.getElementById("dp");
+    const btn  = document.getElementById("btn");
+    const stEl = document.getElementById("status");
 
-  function setStatus(t, k){
-    stEl.textContent = t;
-    dot.className = 'dot' + (k ? (' ' + k) : '');
-  }
-  function showMsg(t, k){
-    msgEl.textContent = t || '';
-    msgEl.className = 'msg ' + (k || '');
-    msgEl.style.display = t ? 'block' : 'none';
-  }
+    function setStatus(msg, mode){
+      stEl.textContent = msg || "";
+      stEl.classList.remove("ok","ng");
+      if(mode) stEl.classList.add(mode);
+    }
 
-  function range(min,max){ const a=[]; for(let i=min;i<=max;i++) a.push(i); return a; }
-  function fill(sel, vals){
-    sel.innerHTML = '<option value="">選択してください</option>';
-    vals.forEach(v=>{
-      const o=document.createElement('option');
-      o.value=String(v); o.textContent=String(v);
-      sel.appendChild(o);
-    });
-  }
+    function range(min, max){
+      const a = [];
+      for(let i=min; i<=max; i++) a.push(i);
+      return a;
+    }
+    function fillSelect(el, values){
+      el.innerHTML = "";
+      const p = document.createElement("option");
+      p.value = "";
+      p.textContent = "選択してください";
+      el.appendChild(p);
 
-  function initUi(){
-    fill(byEl, range(BIRTH_YEAR_MIN,BIRTH_YEAR_MAX));
-    fill(bmEl, range(1,12));
-    fill(gyEl, range(GRAD_YEAR_MIN,GRAD_YEAR_MAX));
-    fill(dpEl, DEPTS);
-  }
+      values.forEach(v=>{
+        const o = document.createElement("option");
+        o.value = String(v);
+        o.textContent = String(v);
+        el.appendChild(o);
+      });
+    }
 
-  async function initLiff(){
-    try{
-      setStatus('LINE認証中…', 'warn');
+    function initUi(){
+      fillSelect(byEl, range(BIRTH_YEAR_MIN, BIRTH_YEAR_MAX));
+      fillSelect(bmEl, range(1, 12));
+      fillSelect(gyEl, range(GRAD_YEAR_MIN, GRAD_YEAR_MAX));
+      fillSelect(dpEl, DEPTS);
+    }
+
+    async function initLiff(){
+      if(!LIFF_ID){
+        setStatus("LIFF_ID が未設定です。", "ng");
+        return;
+      }
+      setStatus("LINEログイン確認中…");
       await liff.init({ liffId: LIFF_ID });
 
       if(!liff.isLoggedIn()){
+        // ログイン後に同じURLへ戻す
         liff.login({ redirectUri: window.location.href });
         return;
       }
-      const p = await liff.getProfile();
-      if(!p || !p.userId){
-        setStatus('userId取得失敗', 'err');
-        showMsg('userIdが取得できませんでした。LINEアプリ内のLIFFで開いてください。', 'err');
-        return;
-      }
-      setStatus('準備完了。入力してください。', 'ok');
-    }catch(e){
-      setStatus('LIFF初期化失敗', 'err');
-      showMsg(String(e && e.message ? e.message : e), 'err');
-    }
-  }
 
-  async function submit(){
-    showMsg('', '');
-    const by=byEl.value, bm=bmEl.value, gy=gyEl.value, dp=dpEl.value;
-    if(!by||!bm||!gy||!dp){ showMsg('未選択の項目があります。', 'warn'); return; }
-
-    btn.disabled = true;
-    setStatus('送信中…', 'warn');
-
-    try{
+      // profile scope が必要
       const profile = await liff.getProfile();
-      const userId = profile && profile.userId ? profile.userId : '';
-      if(!userId){
-        btn.disabled = false;
-        setStatus('userId取得失敗', 'err');
-        showMsg('userIdが取得できませんでした。LINEアプリ内で開いてください。', 'err');
+      if(!profile || !profile.userId){
+        setStatus("userId が取得できませんでした。LINEアプリ内で開いてください。", "ng");
         return;
       }
-
-      // ★「必ず先頭が type=...」になるように文字列で作る
-      const params = new URLSearchParams();
-      params.append('type', 'liff_submit');       // 先頭
-      params.append('userId', userId);
-      params.append('birthYear', by);
-      params.append('birthMonth', bm);
-      params.append('gradYear', gy);
-      params.append('dept', dp);
-
-      const res = await fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: params.toString()
-      });
-
-      const raw = await res.text();
-
-      let data = null;
-      try{ data = JSON.parse(raw); }catch(_){}
-
-      if(!data){
-        btn.disabled = false;
-        setStatus('JSON以外が返りました', 'err');
-        showMsg('HTTP:' + res.status + '\n---raw---\n' + raw, 'err');
-        return;
-      }
-
-      if(data.ok){
-        setStatus('登録完了', 'ok');
-        showMsg(data.message + '\nこの画面は閉じて構いません。', 'ok');
-        if(liff.isInClient()) liff.closeWindow();
-        return;
-      }
-
-      btn.disabled = false;
-      setStatus('登録失敗', 'err');
-      showMsg(data.message || '登録に失敗しました。', 'err');
-
-    }catch(e){
-      btn.disabled = false;
-      setStatus('通信エラー', 'err');
-      showMsg(String(e && e.message ? e.message : e), 'err');
+      setStatus("準備完了。入力して登録してください。", "ok");
     }
-  }
 
-  initUi();
-  initLiff();
-  btn.addEventListener('click', submit);
-</script>
+    function validate(){
+      if(!byEl.value || !bmEl.value || !gyEl.value || !dpEl.value) return false;
+      return true;
+    }
+
+    async function submit(){
+      if(!validate()){
+        setStatus("すべての項目を選択してください。", "ng");
+        return;
+      }
+      if(!liff.isLoggedIn()){
+        setStatus("ログイン状態が確認できません。再ログインします。");
+        liff.login({ redirectUri: window.location.href });
+        return;
+      }
+      if(!GAS_URL){
+        setStatus("GAS_URL が未設定です。", "ng");
+        return;
+      }
+
+      btn.disabled = true;
+      setStatus("送信中…");
+
+      try{
+        const profile = await liff.getProfile();
+        const userId = profile.userId;
+
+        const params = new URLSearchParams();
+        params.set("type", "liff_submit");
+        params.set("userId", userId);
+        params.set("birthYear", byEl.value);
+        params.set("birthMonth", bmEl.value);
+        params.set("gradYear", gyEl.value);
+        params.set("dept", dpEl.value);
+
+        // headersを付けない（余計な判定ミス/プリフライト要因を避ける）
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          body: params
+        });
+
+        const raw = await res.text();
+
+        let data = null;
+        try{ data = JSON.parse(raw); }catch(_){}
+
+        if(!res.ok){
+          setStatus("HTTPエラー: " + res.status + "\n---raw---\n" + raw, "ng");
+          btn.disabled = false;
+          return;
+        }
+        if(!data){
+          setStatus("JSONでない応答が返りました。\n---raw---\n" + raw, "ng");
+          btn.disabled = false;
+          return;
+        }
+        if(data.ok){
+          setStatus("登録完了。\n\n" + data.message + "\n\nこの画面は閉じて構いません。", "ok");
+          // LINE内なら閉じる（必要なら有効化）
+          if(liff.isInClient()) liff.closeWindow();
+          return;
+        }else{
+          setStatus("登録失敗: " + (data.message || "unknown"), "ng");
+          btn.disabled = false;
+          return;
+        }
+      }catch(e){
+        setStatus("通信エラー: " + (e && e.message ? e.message : e), "ng");
+        btn.disabled = false;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async ()=>{
+      initUi();
+      try{
+        await initLiff();
+      }catch(e){
+        setStatus("LIFF初期化失敗: " + (e && e.message ? e.message : e), "ng");
+      }
+      btn.addEventListener("click", ()=>{ submit(); });
+    });
+  </script>
 </body>
 </html>
