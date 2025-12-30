@@ -97,6 +97,17 @@
   }
 
   async function submit(){
+    const text = await res.text();
+    console.log("Response text:", text); // デバッグ用：ブラウザのコンソールで見れる
+
+    let data = null;
+    try { 
+      data = JSON.parse(text); 
+    } catch(e) {
+      setMsg('サーバからの応答が不正です(JSON形式ではありません)。\n内容: ' + text);
+      return;
+    }
+    
     const by = byEl.value, bm = bmEl.value, gy = gyEl.value, dp = dpEl.value;
     if(!by || !bm || !gy || !dp){
       setMsg('生年・生月・卒業年・学科をすべて選択してください。');
