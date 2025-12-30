@@ -3,17 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>卒業年　登録</title>
+  <title>卒業生の動向調査</title>
   <style>
     :root{
       --line:#00b900;
       --bg:#f6f7f9;
       --card:#ffffff;
       --text:#222;
-      --muted:#666;
+      --muted:#667085;
       --border:#e5e7eb;
-      --danger:#b91c1c;
-      --ok:#166534;
+      --danger:#b42318;
+      --ok:#067647;
+      --shadow: 0 10px 24px rgba(0,0,0,0.08);
+      --radius: 14px;
     }
     body{
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
@@ -22,15 +24,15 @@
       color: var(--text);
     }
     .wrap{
-      max-width: 560px;
+      max-width: 680px;
       margin: 0 auto;
       padding: 18px 14px 28px;
     }
     .card{
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       padding: 18px 16px 16px;
     }
     h1{
@@ -38,27 +40,39 @@
       margin: 0 0 10px;
       padding-bottom: 10px;
       border-bottom: 2px solid var(--line);
+      letter-spacing: .02em;
     }
     .note{
       font-size: 13px;
       color: var(--muted);
-      line-height: 1.6;
+      line-height: 1.65;
       background: #f3f4f6;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 10px 12px;
       margin-bottom: 14px;
+    }
+    .grid{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 560px){
+      .grid{
+        grid-template-columns: 1fr 1fr;
+      }
     }
     label{
       display:block;
       font-weight: 650;
-      margin: 14px 0 6px;
-      font-size: 14px;
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: #344054;
     }
     select{
       width: 100%;
       padding: 12px 12px;
-      font-size: 16px;
+      font-size: 15px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: #fff;
@@ -66,9 +80,10 @@
       appearance: none;
       -webkit-appearance: none;
     }
+    .full{ grid-column: 1 / -1; }
     .btn{
       width: 100%;
-      margin-top: 18px;
+      margin-top: 14px;
       padding: 12px 12px;
       border-radius: 12px;
       border: none;
@@ -87,7 +102,7 @@
       font-size: 13px;
       color: var(--muted);
       white-space: pre-wrap;
-      line-height: 1.5;
+      line-height: 1.55;
     }
     .status.ok{ color: var(--ok); }
     .status.ng{ color: var(--danger); }
@@ -102,29 +117,56 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>卒業年　登録</h1>
-
+      <h1>卒業生の動向調査</h1>      
       <div class="note">
-        個人を特定せず、卒業生の皆さんのご活躍を調査しています。生年月日ではなく、<b>生年月（年・月）</b>、<b>卒業年</b>、<b>学科</b>を登録します。<br>
+        個人を特定せず、卒業生の調査をしています。卒業年／学科等を入力ください。生年月日ではなく、<b>生年月（年・月）</b>、<b>卒業年</b>、<b>学科</b>等を入力してください。<br>
         すべて選択して「登録」を押してください。
       </div>
 
-      <label for="by">生年</label>
-      <select id="by"></select>
+      <div class="grid">
+        <div>
+          <label for="by">生年</label>
+          <select id="by"></select>
+        </div>
+        <div>
+          <label for="bm">生月</label>
+          <select id="bm"></select>
+        </div>
 
-      <label for="bm">生月</label>
-      <select id="bm"></select>
+        <div>
+          <label for="gy">卒業年</label>
+          <select id="gy"></select>
+        </div>
+        <div>
+          <label for="dp">学科</label>
+          <select id="dp"></select>
+        </div>
 
-      <label for="gy">卒業年</label>
-      <select id="gy"></select>
+        <div>
+          <label for="gender">性別</label>
+          <select id="gender"></select>
+        </div>
+        <div>
+          <label for="status">現在の状況</label>
+          <select id="status"></select>
+        </div>
 
-      <label for="dp">学科</label>
-      <select id="dp"></select>
+        <div class="full">
+          <label for="major">専攻分野</label>
+          <select id="major"></select>
+        </div>
+
+        <div class="full">
+          <label for="job">職業</label>
+          <select id="job"></select>
+        </div>
+      </div>
 
       <button id="btn" class="btn" type="button">登録</button>
 
-      <div id="status" class="status">起動中…</div>
+      <div id="statusText" class="status">起動中…</div>
       <div class="footer">
+        ※ LINEアプリ内（LIFF）で開いてください。ブラウザ単体では userId を取得できません。
       </div>
     </div>
   </div>
@@ -132,21 +174,50 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     // ======= 必須設定（差し替え）=======
-    const LIFF_ID = "2008793146-jMVaCpQM";
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz9jVIVgIz-yD_WVJTXefxA7yija9lE1tNHY2pP9xZuv9K9KYp9sIR_1VJ_EadQiOV43g/exec";
+var LINE_CHANNEL_ACCESS_TOKEN = 'OI0GQkzet/B2MzB9s2VT+r8U98iR7Ykp/ckqr5ZVVVAonLCToR30s4952LUucza/vP2BV7PpoujlXbDoywr9y1Exfnni39eUDnIUUwmwoe2DHJFuH9bHqsDX6BRR7+4SD7LeD1h8/rq0xRtHcOcIlQdB04t89/1O/w1cDnyilFU=';
+var SpreadsheetID = '1orqFuZrX8bgHBwxyoJPYc4JSmTBFFvzHw7pBZ0jq_do';
+
+// Bot が follow 時に案内する LIFF URL に使う（https://liff.line.me/{LIFF_ID}）
+var LIFF_ID_PROFILE = '2008793146-jMVaCpQM';
+
+    
+    const LIFF_ID = "YOUR_LIFF_ID";
+    const GAS_URL = "YOUR_GAS_EXEC_URL";
     // ==================================
 
-    // 候補範囲（必要に応じて変更）
+    // 候補範囲
     const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2025;
-    const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
+    const GRAD_YEAR_MIN  = 1970, GRAD_YEAR_MAX  = 2030;
+
     const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
+
+    const GENDERS = ["男性","女性","その他","回答しない"];
+
+    const STATUSES = [
+      "大学学部生","大学院生修士課程","大学院生博士課程","短期大学生","専門学校生等","大学校生","進学準備中",
+      "高校卒業後に就職","短期大学・専門学校等卒業後に就職","大学・大学校卒業後就職","大学院修了後に就職","その他"
+    ];
+
+    const MAJORS = [
+      "理学系","数学系","工学系","情報系","医歯薬看護系","農学系","教育系(理数系)","その他理系",
+      "人文社会科学系","法・政治・経済系","芸術系","その他文系","その他"
+    ];
+
+    const JOBS = [
+      "公的機関の研究者","企業研究者","技術系公務員","医歯薬看護師","理数系教員","その他理系職種","文系職種","その他"
+    ];
 
     const byEl = document.getElementById("by");
     const bmEl = document.getElementById("bm");
     const gyEl = document.getElementById("gy");
     const dpEl = document.getElementById("dp");
-    const btn  = document.getElementById("btn");
-    const stEl = document.getElementById("status");
+    const genderEl = document.getElementById("gender");
+    const statusEl = document.getElementById("status");
+    const majorEl = document.getElementById("major");
+    const jobEl = document.getElementById("job");
+
+    const btn = document.getElementById("btn");
+    const stEl = document.getElementById("statusText");
 
     function setStatus(msg, mode){
       stEl.textContent = msg || "";
@@ -179,6 +250,11 @@
       fillSelect(bmEl, range(1, 12));
       fillSelect(gyEl, range(GRAD_YEAR_MIN, GRAD_YEAR_MAX));
       fillSelect(dpEl, DEPTS);
+
+      fillSelect(genderEl, GENDERS);
+      fillSelect(statusEl, STATUSES);
+      fillSelect(majorEl, MAJORS);
+      fillSelect(jobEl, JOBS);
     }
 
     async function initLiff(){
@@ -190,23 +266,22 @@
       await liff.init({ liffId: LIFF_ID });
 
       if(!liff.isLoggedIn()){
-        // ログイン後に同じURLへ戻す
         liff.login({ redirectUri: window.location.href });
         return;
       }
 
-      // profile scope が必要
       const profile = await liff.getProfile();
       if(!profile || !profile.userId){
         setStatus("userId が取得できませんでした。LINEアプリ内で開いてください。", "ng");
         return;
       }
+
       setStatus("準備完了。入力して登録してください。", "ok");
     }
 
     function validate(){
-      if(!byEl.value || !bmEl.value || !gyEl.value || !dpEl.value) return false;
-      return true;
+      const els = [byEl,bmEl,gyEl,dpEl,genderEl,statusEl,majorEl,jobEl];
+      return els.every(el => !!el.value);
     }
 
     async function submit(){
@@ -234,17 +309,18 @@
         const params = new URLSearchParams();
         params.set("type", "liff_submit");
         params.set("userId", userId);
+
         params.set("birthYear", byEl.value);
         params.set("birthMonth", bmEl.value);
         params.set("gradYear", gyEl.value);
         params.set("dept", dpEl.value);
 
-        // headersを付けない（余計な判定ミス/プリフライト要因を避ける）
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          body: params
-        });
+        params.set("gender", genderEl.value);
+        params.set("status", statusEl.value);
+        params.set("major", majorEl.value);
+        params.set("job", jobEl.value);
 
+        const res = await fetch(GAS_URL, { method:"POST", body: params });
         const raw = await res.text();
 
         let data = null;
@@ -262,7 +338,6 @@
         }
         if(data.ok){
           setStatus("登録完了。\n\n" + data.message + "\n\nこの画面は閉じて構いません。", "ok");
-          // LINE内なら閉じる（必要なら有効化）
           if(liff.isInClient()) liff.closeWindow();
           return;
         }else{
@@ -288,3 +363,4 @@
   </script>
 </body>
 </html>
+
