@@ -19,29 +19,29 @@
   <h2>情報登録</h2>
   <div class="small">生年月日ではなく「生年月（年・月）」「卒業年」「学科」を登録します。</div>
 
-  <label>生年</label>
+  <label for="by">生年</label>
   <select id="by"></select>
 
-  <label>生月</label>
+  <label for="bm">生月</label>
   <select id="bm"></select>
 
-  <label>卒業年</label>
+  <label for="gy">卒業年</label>
   <select id="gy"></select>
 
-  <label>学科</label>
+  <label for="dp">学科</label>
   <select id="dp"></select>
 
-  <button id="btn">登録</button>
+  <button id="btn" type="button">登録</button>
   <div id="msg" class="msg"></div>
 </div>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  // ★差し替え
-  const LIFF_ID = "2008793146-jMVaCpQM";
+  // ====== 設定（ここだけ自分の値にする） ======
+  const LIFF_ID = "2008793146-jMVaCpQM"; // ←あなたのLIFF ID（今の値でOK）
   const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyRBQ3gI_QBOsTpM4VhKDlHlhXp-8gbqakAQOBUqzoRHaDnFtvo8SosM-E2r2BMwK9x/exec";
+  // ==========================================
 
-  // 候補（必要に応じて調整）
   const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2020;
   const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
   const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
@@ -53,35 +53,12 @@
   const btn  = document.getElementById('btn');
   const msgEl = document.getElementById('msg');
 
-  const setMsg = (s)=> msgEl.textContent = s || '';
+  const setMsg = (s)=> { msgEl.textContent = s || ''; };
 
-
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-const LIFF_ID = "2008793146-hVVL9JYl";
-
-async function initLiff() {
-  try {
-    await liff.init({ liffId: LIFF_ID });
-
-    // ★ ここが最重要
-    if (!liff.isLoggedIn()) {
-      liff.login();
-      return; // login後は必ず一度画面が再読み込みされる
-    }
-
-    // ログイン済みになってから初めてAPIを呼ぶ
-    const profile = await liff.getProfile();
-    console.log(profile.userId);
-
-  } catch (e) {
-    console.error("LIFF init error:", e);
+  function range(min,max){
+    const a=[]; for(let i=min;i<=max;i++) a.push(i);
+    return a;
   }
-}
-
-initLiff();
-
-
-  
   function fillSelect(el, values, placeholder){
     el.innerHTML = '';
     const o0 = document.createElement('option');
@@ -90,87 +67,98 @@ initLiff();
     el.appendChild(o0);
     values.forEach(v=>{
       const o=document.createElement('option');
-      o.value=String(v); o.textContent=String(v);
+      o.value=String(v);
+      o.textContent=String(v);
       el.appendChild(o);
     });
   }
-  function range(min,max){
-    const a=[]; for(let i=min;i<=max;i++) a.push(i);
-    return a;
-  }
 
-  async function init(){
+  function initUi(){
     fillSelect(byEl, range(BIRTH_YEAR_MIN,BIRTH_YEAR_MAX), '選択してください');
     fillSelect(bmEl, range(1,12), '選択してください');
     fillSelect(gyEl, range(GRAD_YEAR_MIN,GRAD_YEAR_MAX), '選択してください');
     fillSelect(dpEl, DEPTS, '選択してください');
+  }
 
-    try{
-      setMsg('初期化中…');
-      await liff.init({ liffId: LIFF_ID });
-      if (!liff.isLoggedIn()){
-        liff.login();
-        return;
-      }
-      // scope(profile)が必要
-      const p = await liff.getProfile();
-      setMsg('準備完了：入力して登録してください。');
-    }catch(e){
-      setMsg('初期化に失敗しました。\n' + (e?.message ?? e));
+  async function initLiff(){
+    setMsg('初期化中…');
+    await liff.init({ liffId: LIFF_ID });
+
+    // ★未ログインならログインへ（ここで止める）
+    if (!liff.isLoggedIn()){
+      liff.login({ redirectUri: window.location.href });
+      return;
+    }
+
+    // ★ログイン済みになってから初めてAPIを呼ぶ
+    const p = await liff.getProfile();
+    setMsg('準備完了：入力して登録してください。');
+    // デバッグしたければ:
+    // console.log('userId:', p.userId);
+  }
+
+  async function submit(){
+    const by = byEl.value, bm = bmEl.value, gy = gyEl.value, dp = dpEl.value;
+    if(!by || !bm || !gy || !dp){
+      setMsg('生年・生月・卒業年・学科をすべて選択してください。');
+      return;
+    }
+
+    setMsg('ユーザー情報取得中…');
+
+    // ★ここもログイン済みが前提（initLiffが成功していればOK）
+    const profile = await liff.getProfile();
+    const userId = profile && profile.userId ? profile.userId : '';
+    if(!userId){
+      setMsg('userIdが取得できませんでした。');
+      return;
+    }
+
+    setMsg('送信中…');
+
+    const payload = {
+      type: "liff_submit",
+      userId,
+      birthYear: Number(by),
+      birthMonth: Number(bm),
+      gradYear: Number(gy),
+      dept: dp
+    };
+
+    const res = await fetch(GAS_WEBAPP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    // GAS側が JSON を返す前提
+    const data = await res.json().catch(()=>null);
+
+    if(!res.ok){
+      setMsg('サーバエラー: HTTP ' + res.status + '\n' + (data ? JSON.stringify(data) : ''));
+      return;
+    }
+
+    if(data && data.ok){
+      setMsg(data.message + '\nこの画面は閉じて構いません。');
+      // LINEアプリ内なら閉じる（任意）
+      // if(liff.isInClient()) liff.closeWindow();
+    }else{
+      setMsg((data && data.message) ? data.message : '登録に失敗しました。');
     }
   }
 
-  btn.addEventListener('click', async ()=>{
-    try{
-      const by = byEl.value, bm = bmEl.value, gy = gyEl.value, dp = dpEl.value;
-      if(!by||!bm||!gy||!dp){
-        setMsg('生年・生月・卒業年・学科をすべて選択してください。');
-        return;
-      }
-
-      setMsg('ユーザー情報取得中…');
-      const profile = await liff.getProfile();
-      const userId = profile?.userId || '';
-      if(!userId){
-        setMsg('userIdが取得できませんでした。');
-        return;
-      }
-
-      setMsg('送信中…');
-
-      const payload = {
-        type: "liff_submit",
-        userId,
-        birthYear: Number(by),
-        birthMonth: Number(bm),
-        gradYear: Number(gy),
-        dept: dp
-      };
-
-      const res = await fetch(GAS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json().catch(()=>null);
-
-      if(!res.ok){
-        setMsg('サーバエラー: HTTP ' + res.status + '\n' + (data ? JSON.stringify(data) : ''));
-        return;
-      }
-      if(data && data.ok){
-        setMsg(data.message + '\nこの画面は閉じて構いません。');
-        // if(liff.isInClient()) liff.closeWindow();
-      }else{
-        setMsg((data && data.message) ? data.message : '登録に失敗しました。');
-      }
-    }catch(e){
-      setMsg('エラーが発生しました。\n' + (e?.message ?? e));
-    }
+  // 起動
+  initUi();
+  initLiff().catch(e=>{
+    setMsg('初期化に失敗しました。\n' + (e && e.message ? e.message : e));
   });
 
-  init();
+  btn.addEventListener('click', ()=>{
+    submit().catch(e=>{
+      setMsg('エラーが発生しました。\n' + (e && e.message ? e.message : e));
+    });
+  });
 </script>
 </body>
 </html>
