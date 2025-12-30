@@ -55,6 +55,33 @@
 
   const setMsg = (s)=> msgEl.textContent = s || '';
 
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+const LIFF_ID = "2008793146-hVVL9JYl";
+
+async function initLiff() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+
+    // ★ ここが最重要
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return; // login後は必ず一度画面が再読み込みされる
+    }
+
+    // ログイン済みになってから初めてAPIを呼ぶ
+    const profile = await liff.getProfile();
+    console.log(profile.userId);
+
+  } catch (e) {
+    console.error("LIFF init error:", e);
+  }
+}
+
+initLiff();
+
+
+  
   function fillSelect(el, values, placeholder){
     el.innerHTML = '';
     const o0 = document.createElement('option');
