@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>情報登録</title>
+  <style>
+    body{font-family:sans-serif;margin:16px}
+    .box{max-width:520px;margin:0 auto}
+    label{display:block;margin:12px 0 6px;font-weight:600}
+    select,button{width:100%;padding:10px;font-size:16px}
+    button{margin-top:16px}
+    .msg{margin-top:12px;white-space:pre-wrap}
+    .small{color:#666;font-size:12px;margin-top:10px}
+  </style>
+</head>
+<body>
+<div class="box">
+  <h2>情報登録</h2>
+  <div class="small">生年月日ではなく「生年月（年・月）」「卒業年」「学科」を登録します。</div>
+
+  <label>生年</label>
+  <select id="by"></select>
+
+  <label>生月</label>
+  <select id="bm"></select>
+
+  <label>卒業年</label>
+  <select id="gy"></select>
+
+  <label>学科</label>
+  <select id="dp"></select>
+
+  <button id="btn">登録</button>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  // ★差し替え
+  const LIFF_ID = "2008793146-hVVL9JYl";
+  const GAS_WEBAPP_URL = "https://script.google.com/macros/s/＜あなたのGAS＞/exec";
+
+  // 候補（必要に応じて調整）
+  const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2020;
+  const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
+  const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
+
+  const byEl = document.getElementById('by');
+  const bmEl = document.getElementById('bm');
+  const gyEl = document.getElementById('gy');
+  const dpEl = document.getElementById('dp');
+  const btn  = document.getElementById('btn');
+  const msgEl = document.getElementById('msg');
+
+  const setMsg = (s)=> msgEl.textContent = s || '';
+
+  function fillSelect(el, values, placeholder){
+    el.innerHTML = '';
+    const o0 = document.createElement('option');
+    o0.value = '';
+    o0.textContent = placeholder;
+    el.appendChild(o0);
+    values.forEach(v=>{
+      const o=document.createElement('option');
+      o.value=String(v); o.textContent=String(v);
+      el.appendChild(o);
+    });
+  }
+  function range(min,max){
+    const a=[]; for(let i=min;i<=max;i++) a.push(i);
+    return a;
+  }
+
+  async function init(){
+    fillSelect(byEl, range(BIRTH_YEAR_MIN,BIRTH_YEAR_MAX), '選択してください');
+    fillSelect(bmEl, range(1,12), '選択してください');
+    fillSelect(gyEl, range(GRAD_YEAR_MIN,GRAD_YEAR_MAX), '選択してください');
+    fillSelect(dpEl, DEPTS, '選択してください');
+
+    try{
+      setMsg('初期化中…');
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()){
+        liff.login();
+        return;
+      }
+      // scope(profile)が必要
+      const p = await liff.getProfile();
+      setMsg('準備完了：入力して登録してください。');
+    }catch(e){
+      setMsg('初期化に失敗しました。\n' + (e?.message ?? e));
+    }
+  }
+
+  btn.addEventListener('click', async ()=>{
+    try{
+      const by = byEl.value, bm = bmEl.value, gy = gyEl.value, dp = dpEl.value;
+      if(!by||!bm||!gy||!dp){
+        setMsg('生年・生月・卒業年・学科をすべて選択してください。');
+        return;
+      }
+
+      setMsg('ユーザー情報取得中…');
+      const profile = await liff.getProfile();
+      const userId = profile?.userId || '';
+      if(!userId){
+        setMsg('userIdが取得できませんでした。');
+        return;
+      }
+
+      setMsg('送信中…');
+
+      const payload = {
+        type: "liff_submit",
+        userId,
+        birthYear: Number(by),
+        birthMonth: Number(bm),
+        gradYear: Number(gy),
+        dept: dp
+      };
+
+      const res = await fetch(GAS_WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(()=>null);
+
+      if(!res.ok){
+        setMsg('サーバエラー: HTTP ' + res.status + '\n' + (data ? JSON.stringify(data) : ''));
+        return;
+      }
+      if(data && data.ok){
+        setMsg(data.message + '\nこの画面は閉じて構いません。');
+        // if(liff.isInClient()) liff.closeWindow();
+      }else{
+        setMsg((data && data.message) ? data.message : '登録に失敗しました。');
+      }
+    }catch(e){
+      setMsg('エラーが発生しました。\n' + (e?.message ?? e));
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
