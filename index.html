@@ -125,11 +125,34 @@
       dept: dp
     };
 
-    const res = await fetch(GAS_WEBAPP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+const res = await // ✅ CORSプリフライト回避（form-urlencoded）
+const params = new URLSearchParams();
+params.set("type", "liff_submit");
+params.set("userId", userId);
+params.set("birthYear", String(by));
+params.set("birthMonth", String(bm));
+params.set("gradYear", String(gy));
+params.set("dept", dp);
+
+const res = await fetch(GAS_WEBAPP_URL, {
+  method: "POST",
+  body: params, // ← headers を自分で付けない（付けるとプリフライトの原因になります）
+});
+
+const text = await res.text();          // ← JSON固定にしない
+let data = null;
+try { data = JSON.parse(text); } catch(_) {}
+
+if (!res.ok) {
+  setMsg("サーバエラー: HTTP " + res.status + "\n" + text);
+  return;
+}
+if (data && data.ok) {
+  setMsg(data.message);
+} else {
+  setMsg(data?.message ?? ("登録に失敗しました。\n" + text));
+}
+
 
     // GAS側が JSON を返す前提
     const data = await res.json().catch(()=>null);
