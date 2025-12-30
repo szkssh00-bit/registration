@@ -1,22 +1,143 @@
 <!doctype html>
 <html lang="ja">
-<head><meta charset="utf-8"/><title>テスト</title></head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>情報登録</title>
+  <style>
+    body { font-family: sans-serif; margin: 16px; background-color: #f8f9fa; }
+    .box { max-width: 520px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; color: #333; font-size: 20px; border-bottom: 2px solid #00b900; padding-bottom: 8px; }
+    label { display: block; margin: 16px 0 6px; font-weight: 600; color: #444; }
+    select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; display: block; }
+    select { background-color: #fff; margin-bottom: 4px; }
+    button { margin-top: 24px; background-color: #00b900; color: #fff; border: none; font-weight: bold; cursor: pointer; }
+    button:disabled { background-color: #ccc; }
+    .msg { margin-top: 16px; white-space: pre-wrap; font-size: 14px; line-height: 1.4; padding: 10px; border-radius: 4px; background: #fff0f0; border: 1px solid #ffcccc; display: none; }
+    .status { margin-top: 10px; font-size: 12px; color: #666; }
+  </style>
+</head>
 <body>
-  <h2>プルダウン表示テスト</h2>
-  <select id="test_select"><option>読み込み中...</option></select>
-  <div id="test_msg"></div>
+<div class="box">
+  <h2>情報登録</h2>
+  
+  <label for="by">生年</label>
+  <select id="by"><option value="">読み込み失敗</option></select>
 
-  <script>
-    // 画面が開いたらすぐに実行されるかテスト
-    window.onload = function() {
-      const el = document.getElementById('test_select');
-      const msg = document.getElementById('test_msg');
+  <label for="bm">生月</label>
+  <select id="bm"><option value="">読み込み失敗</option></select>
+
+  <label for="gy">卒業年</label>
+  <select id="gy"><option value="">読み込み失敗</option></select>
+
+  <label for="dp">学科</label>
+  <select id="dp"><option value="">読み込み失敗</option></select>
+
+  <button id="btn" type="button">登録</button>
+  <div id="status" class="status">システム起動中...</div>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  // ===== 設定確認 =====
+  const LIFF_ID = "2008793146-jMVaCpQM"; 
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzpnisve2CmJD_YzW69rbab_r-sBgmoe_IC9WEdD48fM4WH818pW5L4ztehMuknc72f/exec";
+
+  const byEl = document.getElementById('by');
+  const bmEl = document.getElementById('bm');
+  const gyEl = document.getElementById('gy');
+  const dpEl = document.getElementById('dp');
+  const btn  = document.getElementById('btn');
+  const msgEl = document.getElementById('msg');
+  const stEl  = document.getElementById('status');
+
+  function showError(m) {
+    msgEl.style.display = 'block';
+    msgEl.textContent = m;
+  }
+
+  // 1. まずUIを何があっても作る
+  function initUi() {
+    try {
+      const range = (min, max) => Array.from({length: max - min + 1}, (_, i) => min + i);
+      const fill = (el, vals) => {
+        el.innerHTML = '<option value="">選択してください</option>';
+        vals.forEach(v => {
+          const o = document.createElement('option');
+          o.value = v; o.textContent = v;
+          el.appendChild(o);
+        });
+      };
+      fill(byEl, range(1960, 2025));
+      fill(bmEl, range(1, 12));
+      fill(gyEl, range(2010, 2035));
+      fill(dpEl, ["理数科", "国際コミュニケーション学科", "普通科"]);
+      stEl.textContent = "UI準備完了。LINE認証を開始します...";
+    } catch(e) {
+      showError("UI作成エラー: " + e.message);
+    }
+  }
+
+  // 2. LINE初期化
+  async function initLiff() {
+    if (!LIFF_ID) {
+      showError("LIFF_IDが設定されていません。");
+      return;
+    }
+    try {
+      await liff.init({ liffId: LIFF_ID });
+      stEl.textContent = "LINE認証中...";
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href });
+        return;
+      }
+      stEl.textContent = "ログイン完了。入力してください。";
+      stEl.style.color = "green";
+    } catch (e) {
+      showError("LIFF初期化エラー: " + e.code + "\n" + e.message + "\n\n【確認事項】\n・LIFF IDは正しいですか？\n・DevelopersのEndpoint URLと今のURLは一致していますか？");
+    }
+  }
+
+  // 3. 送信処理
+  btn.onclick = async () => {
+    const val = { by:byEl.value, bm:bmEl.value, gy:gyEl.value, dp:dpEl.value };
+    if (!val.by || !val.bm || !val.gy || !val.dp) {
+      alert("すべて選択してください"); return;
+    }
+    
+    stEl.textContent = "送信中...";
+    try {
+      const profile = await liff.getProfile();
+      const p = new URLSearchParams();
+      p.set("type", "liff_submit");
+      p.set("userId", profile.userId);
+      p.set("birthYear", val.by);
+      p.set("birthMonth", val.bm);
+      p.set("gradYear", val.gy);
+      p.set("dept", val.dp);
+
+      const res = await fetch(GAS_URL, {
+        method: "POST",
+        body: p
+      });
+      const resText = await res.text();
+      const resJson = JSON.parse(resText);
       
-      // 中身を書き換える
-      el.innerHTML = '<option value="1">選択肢1</option><option value="2">選択肢2</option>';
-      msg.textContent = "JavaScriptは正常に動いています。";
-      msg.style.color = "green";
-    };
-  </script>
+      if (resJson.ok) {
+        alert("登録成功！\n" + resJson.message);
+        liff.closeWindow();
+      } else {
+        showError("保存失敗: " + resJson.message);
+      }
+    } catch (e) {
+      showError("送信エラー: " + e.message);
+    }
+  };
+
+  // 実行
+  initUi();
+  initLiff();
+</script>
 </body>
 </html>
