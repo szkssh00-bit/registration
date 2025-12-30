@@ -11,13 +11,16 @@
     select,button{width:100%;padding:10px;font-size:16px}
     button{margin-top:16px}
     .msg{margin-top:12px;white-space:pre-wrap}
-    .small{color:#666;font-size:12px;margin-top:10px}
+    .small{color:#666;font-size:12px;margin-top:10px;line-height:1.4}
   </style>
 </head>
 <body>
 <div class="box">
   <h2>情報登録</h2>
-  <div class="small">生年月日ではなく「生年月（年・月）」「卒業年」「学科」を登録します。</div>
+  <div class="small">
+    生年月日ではなく「生年月（年・月）」「卒業年」「学科」を登録します。<br>
+    すべて選択して「登録」を押してください。
+  </div>
 
   <label for="by">生年</label>
   <select id="by"></select>
@@ -37,11 +40,12 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  // ====== 設定（ここだけ自分の値にする） ======
-  const LIFF_ID = "2008793146-jMVaCpQM"; // ←あなたのLIFF ID（今の値でOK）
-  const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyRBQ3gI_QBOsTpM4VhKDlHlhXp-8gbqakAQOBUqzoRHaDnFtvo8SosM-E2r2BMwK9x/exec";
-  // ==========================================
+  // ===== 設定：ここだけあなたの値に合わせる =====
+  const LIFF_ID = "2008793146-hVVL9JYl"; // ←あなたのLIFF ID（最新のものに）
+  const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwetq4TdlLq8BI-qwOTPRWrRtLoG8GlmGvmG-5sdD2QfZ_m998fVWZWsV59dRSa7V4c/exec";
+  // ===========================================
 
+  // 候補（必要に応じて調整）
   const BIRTH_YEAR_MIN = 1960, BIRTH_YEAR_MAX = 2020;
   const GRAD_YEAR_MIN  = 2010, GRAD_YEAR_MAX  = 2035;
   const DEPTS = ["理数科","国際コミュニケーション学科","普通科"];
@@ -52,7 +56,6 @@
   const dpEl = document.getElementById('dp');
   const btn  = document.getElementById('btn');
   const msgEl = document.getElementById('msg');
-
   const setMsg = (s)=> { msgEl.textContent = s || ''; };
 
   function range(min,max){
@@ -84,17 +87,20 @@
     setMsg('初期化中…');
     await liff.init({ liffId: LIFF_ID });
 
-    // ★未ログインならログインへ（ここで止める）
+    // ★ 未ログインならログインへ（ここで止める）
     if (!liff.isLoggedIn()){
+      // ここで login を呼ぶと、ログイン後にこのURLへ戻ってくる
       liff.login({ redirectUri: window.location.href });
       return;
     }
 
-    // ★ログイン済みになってから初めてAPIを呼ぶ
+    // ★ ログイン済みになってから初めてAPIを呼ぶ
     const p = await liff.getProfile();
+    if (!p || !p.userId) {
+      setMsg('ユーザー情報（userId）が取得できませんでした。LINEアプリ内で開いてください。');
+      return;
+    }
     setMsg('準備完了：入力して登録してください。');
-    // デバッグしたければ:
-    // console.log('userId:', p.userId);
   }
 
   async function submit(){
@@ -104,70 +110,52 @@
       return;
     }
 
-    setMsg('ユーザー情報取得中…');
+    // 念のためログイン確認
+    if (!liff.isLoggedIn()){
+      setMsg('ログイン状態が確認できません。再ログインします。');
+      liff.login({ redirectUri: window.location.href });
+      return;
+    }
 
-    // ★ここもログイン済みが前提（initLiffが成功していればOK）
+    setMsg('ユーザー情報取得中…');
     const profile = await liff.getProfile();
     const userId = profile && profile.userId ? profile.userId : '';
     if(!userId){
-      setMsg('userIdが取得できませんでした。');
+      setMsg('userIdが取得できませんでした。LINEアプリ内で開いてください。');
       return;
     }
 
     setMsg('送信中…');
 
-    const payload = {
-      type: "liff_submit",
-      userId,
-      birthYear: Number(by),
-      birthMonth: Number(bm),
-      gradYear: Number(gy),
-      dept: dp
-    };
+    // ✅ CORSプリフライト回避：JSONではなく form-urlencoded で送る
+    const params = new URLSearchParams();
+    params.set("type", "liff_submit");
+    params.set("userId", userId);
+    params.set("birthYear", String(by));
+    params.set("birthMonth", String(bm));
+    params.set("gradYear", String(gy));
+    params.set("dept", dp);
 
-const res = await // ✅ CORSプリフライト回避（form-urlencoded）
-const params = new URLSearchParams();
-params.set("type", "liff_submit");
-params.set("userId", userId);
-params.set("birthYear", String(by));
-params.set("birthMonth", String(bm));
-params.set("gradYear", String(gy));
-params.set("dept", dp);
+    const res = await fetch(GAS_WEBAPP_URL, {
+      method: "POST",
+      body: params
+      // headers を自分で付けない（付けるとプリフライトの原因になり得る）
+    });
 
-const res = await fetch(GAS_WEBAPP_URL, {
-  method: "POST",
-  body: params, // ← headers を自分で付けない（付けるとプリフライトの原因になります）
-});
-
-const text = await res.text();          // ← JSON固定にしない
-let data = null;
-try { data = JSON.parse(text); } catch(_) {}
-
-if (!res.ok) {
-  setMsg("サーバエラー: HTTP " + res.status + "\n" + text);
-  return;
-}
-if (data && data.ok) {
-  setMsg(data.message);
-} else {
-  setMsg(data?.message ?? ("登録に失敗しました。\n" + text));
-}
-
-
-    // GAS側が JSON を返す前提
-    const data = await res.json().catch(()=>null);
+    const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch(_) {}
 
     if(!res.ok){
-      setMsg('サーバエラー: HTTP ' + res.status + '\n' + (data ? JSON.stringify(data) : ''));
+      setMsg('サーバエラー: HTTP ' + res.status + '\n' + text);
       return;
     }
-
     if(data && data.ok){
       setMsg(data.message + '\nこの画面は閉じて構いません。');
       // LINEアプリ内なら閉じる（任意）
-      // if(liff.isInClient()) liff.closeWindow();
+      // if (liff.isInClient()) liff.closeWindow();
     }else{
-      setMsg((data && data.message) ? data.message : '登録に失敗しました。');
+      setMsg((data && data.message) ? data.message : ('登録に失敗しました。\n' + text));
     }
   }
 
