@@ -33,7 +33,7 @@
     <div id="jstSection" class="card" style="display:none;">
       <h1>JST卒業生調査</h1>
       <p style="font-size:14px; line-height:1.6; margin-bottom:20px;">
-      【お願い】\n【2026/1/28まで】\n現在、国立研究開発法人 科学技術振興機構(JST)による、SSHの教育カリキュラムを受けた卒業生（2019年度より全校生徒対象、それ以前は理数科対象）の調査を実施しています。\n\n毎年、郵送させていただいておりましたが、今年度からLINEに移行いたします。何卒ご協力を宜しくお願いいたします。\n
+      【お願い】</br>【2026/1/28まで】</br>現在、国立研究開発法人 科学技術振興機構(JST)による、SSHの教育カリキュラムを受けた卒業生（2019年度より全校生徒対象、それ以前は理数科対象）の調査を実施しています。</br></br>毎年、郵送させていただいておりましたが、今年度からLINEに移行いたします。何卒ご協力を宜しくお願いいたします。</br>
        外部サイト（JST）のアンケートページを開きます。回答が完了しましたら、下のボタンを押して終了してください。
       </p>
       <button id="jstBtn" class="btn" style="background:#007bff; margin-bottom:15px;">JST調査サイトを開く</button>
@@ -44,7 +44,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     const LIFF_ID = '2008793146-jMVaCpQM';
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxYfZ_8f-tdotSo4vGKjDoVvEkDKR4S3JM9efb18royJkp2GdQzURoQo3Qb5xFFklTIPA/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz4mat34ndOUo5im5sBnCaAjOirRF1y55gWxQKJJ_MUh2Em52h46YKd6Am26uJhEM17Tw/exec";
     const BOT_ID = "@512stcdu";
     const JST_URL = "https://form2.jst.go.jp/s/r7_ssh_ishiki_sotugyou";
 
@@ -57,7 +57,7 @@
 
     function initUi(){
       const fill = (el, arr) => {
-        el.innerHTML = '<option value="">選択</option>';
+        el.innerHTML = '<option value="">選択してください。</option>';
         arr.forEach(v => { const o = document.createElement("option"); o.value=v; o.textContent=v; el.appendChild(o); });
       };
       const range = (s,e) => Array.from({length:e-s+1},(_,i)=>s+i);
