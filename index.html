@@ -3,55 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>卒業生の動向調査</title>
+  <title>アンケートシステム</title>
   <style>
-    :root{
-      --line:#00b900; --bg:#f6f7f9; --card:#ffffff; --text:#222;
-      --muted:#667085; --border:#e5e7eb; --danger:#b42318; --ok:#067647;
-      --shadow: 0 10px 24px rgba(0,0,0,0.08); --radius: 14px;
-    }
+    :root{ --line:#00b900; --bg:#f6f7f9; --card:#ffffff; --text:#222; --border:#e5e7eb; --radius: 14px; }
     body{ font-family: system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-    .wrap{ max-width: 680px; margin: 0 auto; padding: 18px 14px 28px; }
-    .card{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px 16px; }
-    h1{ font-size: 18px; margin: 0 0 10px; padding-bottom: 10px; border-bottom: 2px solid var(--line); }
-    .note{ font-size: 13px; color: var(--muted); line-height: 1.65; background: #f3f4f6; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; }
-    .grid{ display: grid; grid-template-columns: 1fr; gap: 12px; }
-    @media (min-width: 560px){ .grid{ grid-template-columns: 1fr 1fr; } }
-    label{ display:block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #344054; }
-    select{ width: 100%; padding: 12px; font-size: 15px; border-radius: 12px; border: 1px solid var(--border); background: #fff; appearance: none; -webkit-appearance: none; }
-    .full{ grid-column: 1 / -1; }
-    .btn{ width: 100%; margin-top: 14px; padding: 14px; border-radius: 12px; border: none; background: var(--line); color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; }
-    .btn:disabled{ background: #9ca3af; }
-    .status{ margin-top: 12px; font-size: 13px; white-space: pre-wrap; }
-    .status.ok{ color: var(--ok); }
-    .status.ng{ color: var(--danger); }
+    .wrap{ max-width: 680px; margin: 0 auto; padding: 20px 14px; }
+    .card{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    h1{ font-size: 18px; margin: 0 0 15px; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
+    .btn{ width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--line); color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+    .jst-link { display: block; text-align: center; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold; }
+    select, input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); box-sizing: border-box; }
+    label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <h1>卒業生アンケート</h1>
-      <div class="note">回答内容は統計的に処理されるため、個人を特定することはありません。</div>
-      <div class="grid">
-        <div><label>生年</label><select id="by"></select></div>
-        <div><label>生月</label><select id="bm"></select></div>
-        <div><label>卒業年</label><select id="gy"></select></div>
-        <div><label>学科</label><select id="dp"></select></div>
-        <div><label>性別</label><select id="gender"></select></div>
-        <div><label>現在の状況</label><select id="status"></select></div>
-        <div class="full"><label>専攻分野</label><select id="major"></select></div>
-        <div class="full"><label>職業</label><select id="job"></select></div>
+    <div id="mainForm" class="card">
+      <h1>卒業生の動向調査</h1>
+      <div id="formContent">
+        <label>生年</label><select id="by"></select>
+        <label>生月</label><select id="bm"></select>
+        <label>卒業年</label><select id="gy"></select>
+        <label>学科</label><select id="dp"></select>
+        <label>性別</label><select id="gender"></select>
+        <label>現在の状況</label><select id="status"></select>
+        <label>専攻分野</label><select id="major"></select>
+        <label>職業</label><select id="job"></select>
+        <button id="btn" class="btn">送信して次へ</button>
       </div>
-      <button id="btn" class="btn">回答を送信し、本校を卒業生に紹介</button>
-      <div id="statusText" class="status">起動中…</div>
+    </div>
+
+    <div id="jstArea" class="card" style="display:none;">
+      <h1>JST卒業生調査</h1>
+      <p style="font-size:14px; line-height:1.6;">外部サイト（JST）のアンケートページを開きます。回答後、この画面を閉じてください。</p>
+      <button id="jstBtn" class="btn">アンケートサイトを開く</button>
+      <button id="closeBtn" class="btn" style="background:#666; margin-top:20px;">回答完了して閉じる</button>
     </div>
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     const LIFF_ID = '2008793146-jMVaCpQM';
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxE8xHwzuDVjAg1ZlPhrYYYM1894ZnzkyOi6H8a0dpza0R9N2sKHvCX85SS8Hfilos-dA/exec";
-    const BOT_ID = "@512stcdu";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwwFGnUaMDZwTkmCWlYNDmyHErYBkhXf1ROCyLn1jF7nJ_GIMpzrElXQEXZqS3n-Lueow/exec";
 
     const els = {
       by: document.getElementById("by"), bm: document.getElementById("bm"),
@@ -59,10 +52,6 @@
       gender: document.getElementById("gender"), status: document.getElementById("status"),
       major: document.getElementById("major"), job: document.getElementById("job")
     };
-    const btn = document.getElementById("btn");
-    const stEl = document.getElementById("statusText");
-
-    function setStatus(msg, mode){ stEl.textContent = msg; stEl.className = "status " + (mode||""); }
 
     function initUi(){
       const fill = (el, arr) => {
@@ -81,9 +70,8 @@
     }
 
     async function submit() {
-      for(let key in els) { if(!els[key].value){ setStatus("すべての項目を選択してください", "ng"); return; } }
-      btn.disabled = true;
-      setStatus("送信中...");
+      for(let key in els) { if(!els[key].value){ alert("全項目入力してください"); return; } }
+      document.getElementById("btn").disabled = true;
 
       try {
         const profile = await liff.getProfile();
@@ -93,52 +81,42 @@
         params.set("displayName", profile.displayName);
         for(let key in els) params.set(key, els[key].value);
 
-        const res = await fetch(GAS_URL, { method:"POST", body: params });
-        const data = await res.json();
-        if(!data.ok) throw new Error(data.message);
+        await fetch(GAS_URL, { method:"POST", body: params });
 
         if (liff.isInClient()) {
-          await liff.sendMessages([{
-            type: 'text', text: 'アンケートの回答が完了しました！\nご協力ありがとうございました。'
-          }]);
+          await liff.sendMessages([{ type: 'text', text: 'アンケートの回答が完了しました！\nご協力ありがとうございました。' }]);
+          liff.closeWindow();
         }
-
-        if (liff.isApiAvailable('shareTargetPicker')) {
-          await liff.shareTargetPicker([{
-            "type": "flex", "altText": "おすすめのLINEボットを紹介します！",
-            "contents": {
-              "type": "bubble",
-              "body": {
-                "type": "box", "layout": "vertical",
-                "contents": [
-                  { "type": "text", "text": "静岡北高校SSH", "weight": "bold", "size": "xl", "color": "#00b900" },
-                  { "type": "text", "text": "卒業生用 静北アカウントができました！", "wrap": true, "margin": "md" }
-                ]
-              },
-              "footer": {
-                "type": "box", "layout": "vertical",
-                "contents": [{
-                  "type": "button", "style": "primary", "color": "#00b900",
-                  "action": { "type": "uri", "label": "友だち追加する", "uri": "https://line.me/R/ti/p/" + BOT_ID }
-                }]
-              }
-            }
-          }]);
-        }
-
-        setStatus("完了しました！画面を閉じます。", "ok");
-        setTimeout(() => { if(liff.isInClient()) liff.closeWindow(); }, 1500);
-      } catch (e) {
-        setStatus("エラー: " + e.message, "ng");
-        btn.disabled = false;
-      }
+      } catch (e) { alert(e); }
     }
 
     window.onload = async () => {
-      initUi();
       await liff.init({ liffId: LIFF_ID });
-      if(!liff.isLoggedIn()) { liff.login(); } else { setStatus("準備完了", "ok"); }
-      btn.onclick = submit;
+      if(!liff.isLoggedIn()) { liff.login(); return; }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetUrl = urlParams.get('url');
+
+      // JSTアンケートモードの表示切り替え
+      if (targetUrl) {
+        document.getElementById("mainForm").style.display = "none";
+        document.getElementById("jstArea").style.display = "block";
+        
+        document.getElementById("jstBtn").onclick = () => {
+          liff.openWindow({ url: targetUrl, external: true });
+        };
+
+        document.getElementById("closeBtn").onclick = async () => {
+          if (liff.isInClient()) {
+            // 5項：LIFFを閉じる際にメッセージを送り、GAS側のhandleNewsを起動させる
+            await liff.sendMessages([{ type: 'text', text: 'JSTアンケート画面を閉じました。' }]);
+            liff.closeWindow();
+          }
+        };
+      } else {
+        initUi();
+        document.getElementById("btn").onclick = submit;
+      }
     };
   </script>
 </body>
