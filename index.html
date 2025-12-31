@@ -1,133 +1,298 @@
+<!-- index.html（LIFF画面: 回答フォーム + JSTモード） -->
 <!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>調査システム</title>
+  <title>卒業生の動向調査</title>
   <style>
-    :root{ --line:#00b900; --bg:#f6f7f9; --card:#ffffff; --text:#222; --border:#e5e7eb; --radius: 14px; }
-    body{ font-family: system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-    .wrap{ max-width: 680px; margin: 0 auto; padding: 18px 14px; }
-    .card{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    h1{ font-size: 18px; margin: 0 0 15px; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
-    .btn{ width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--line); color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; }
-    select, input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid var(--border); box-sizing: border-box; font-size: 15px; }
-    label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px; color: #555; }
+    :root{
+      --line:#00b900;
+      --bg:#f6f7f9;
+      --card:#ffffff;
+      --text:#222;
+      --muted:#667085;
+      --border:#e5e7eb;
+      --radius:14px;
+      --shadow:0 6px 18px rgba(16,24,40,.06);
+    }
+    body{ font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; margin:0; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:720px; margin:0 auto; padding:18px 14px 28px; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
+    h1{ font-size:18px; margin:0 0 14px; padding-bottom:8px; border-bottom:2px solid var(--line); }
+    .desc{ font-size:13px; color:var(--muted); line-height:1.6; margin:0 0 14px; }
+    label{ display:block; font-size:13px; font-weight:700; margin:12px 0 6px; color:#344054; }
+    select,button{
+      width:100%;
+      padding:12px;
+      font-size:15px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      box-sizing:border-box;
+      background:#fff;
+    }
+    select{ appearance:auto; }
+    button{
+      margin-top:14px;
+      border:none;
+      background:var(--line);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+    button:disabled{ background:#cbd5e1; cursor:not-allowed; }
+    .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:520px){ .row{ grid-template-columns:1fr; } }
+    .btn2{ background:#0b5ed7; }
+    .btn3{ background:#6b7280; }
   </style>
 </head>
 <body>
   <div class="wrap">
+
+    <!-- 通常フォーム -->
     <div id="formSection" class="card">
       <h1>卒業生の動向調査</h1>
-      <label>生年</label><select id="by"></select>
-      <label>生月</label><select id="bm"></select>
-      <label>卒業年</label><select id="gy"></select>
-      <label>学科</label><select id="dp"></select>
-      <label>性別</label><select id="gender"></select>
-      <label>現在の状況</label><select id="status"></select>
-      <label>専攻分野</label><select id="major"></select>
-      <label>職業</label><select id="job"></select>
-      <button id="btn" class="btn">回答を送信し、本校を紹介</button>
+      <p class="desc">
+        生年月日（生日）は取得せず、<b>生年・生月</b>、<b>卒業年</b>、および追加項目を登録します。すべて選択してください。
+      </p>
+
+      <div class="row">
+        <div>
+          <label for="by">生年</label>
+          <select id="by"></select>
+        </div>
+        <div>
+          <label for="bm">生月</label>
+          <select id="bm"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="gy">卒業年</label>
+          <select id="gy"></select>
+        </div>
+        <div>
+          <label for="dp">学科</label>
+          <select id="dp"></select>
+        </div>
+      </div>
+
+      <label for="gender">性別</label>
+      <select id="gender"></select>
+
+      <label for="status">現在の状況</label>
+      <select id="status"></select>
+
+      <label for="major">専攻分野</label>
+      <select id="major"></select>
+
+      <label for="job">職業</label>
+      <select id="job"></select>
+
+      <button id="btn" type="button">送信する</button>
+      <div id="statusText" class="status">起動中…</div>
     </div>
 
+    <!-- JSTモード -->
     <div id="jstSection" class="card" style="display:none;">
       <h1>JST卒業生調査</h1>
-      <p style="font-size:14px; line-height:1.6; margin-bottom:20px;">
-      【お願い】</br>【2026/1/28まで】</br>現在、国立研究開発法人 科学技術振興機構(JST)による、SSHの教育カリキュラムを受けた卒業生（2019年度より全校生徒対象、それ以前は理数科対象）の調査を実施しています。</br></br>毎年、郵送させていただいておりましたが、今年度からLINEに移行いたします。何卒ご協力を宜しくお願いいたします。</br>
-       外部サイト（JST）のアンケートページを開きます。回答が完了しましたら、下のボタンを押して終了してください。
+      <p class="desc">
+        外部サイト（JST）のアンケートページを開きます。回答が完了したら、この画面に戻り、
+        <b>「終了してニュースを見る」</b>を押してください。
       </p>
-      <button id="jstBtn" class="btn" style="background:#007bff; margin-bottom:15px;">JST調査サイトを開く</button>
-      <button id="closeBtn" class="btn" style="background:#666;">終了して本校のニュースを見る</button>
+      <button id="jstBtn" class="btn2" type="button">JST調査サイトを開く</button>
+      <button id="closeBtn" class="btn3" type="button" style="margin-top:10px;">終了してニュースを見る</button>
+      <div id="jstStatus" class="status"></div>
     </div>
+
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    const LIFF_ID = '2008793146-jMVaCpQM';
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz4mat34ndOUo5im5sBnCaAjOirRF1y55gWxQKJJ_MUh2Em52h46YKd6Am26uJhEM17Tw/exec";
-    const BOT_ID = "@512stcdu";
+    // ====== 設定（必須）======
+    const LIFF_ID = "2008793146-jMVaCpQM";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby6AvyxiVqf4BL8OIb0J-_xpg3J2PHT75HIKN9SAMDWkJaiNQLTam4-OSpdJIJ5CvBUcg/exec";
     const JST_URL = "https://form2.jst.go.jp/s/r7_ssh_ishiki_sotugyou";
+    // =========================
 
     const els = {
-      by: document.getElementById("by"), bm: document.getElementById("bm"),
-      gy: document.getElementById("gy"), dp: document.getElementById("dp"),
-      gender: document.getElementById("gender"), status: document.getElementById("status"),
-      major: document.getElementById("major"), job: document.getElementById("job")
+      by: document.getElementById("by"),
+      bm: document.getElementById("bm"),
+      gy: document.getElementById("gy"),
+      dp: document.getElementById("dp"),
+      gender: document.getElementById("gender"),
+      status: document.getElementById("status"),
+      major: document.getElementById("major"),
+      job: document.getElementById("job"),
+      btn: document.getElementById("btn"),
+      st: document.getElementById("statusText"),
+      form: document.getElementById("formSection"),
+      jst: document.getElementById("jstSection"),
+      jstBtn: document.getElementById("jstBtn"),
+      closeBtn: document.getElementById("closeBtn"),
+      jstStatus: document.getElementById("jstStatus")
     };
 
-    function initUi(){
-      const fill = (el, arr) => {
-        el.innerHTML = '<option value="">選択してください。</option>';
-        arr.forEach(v => { const o = document.createElement("option"); o.value=v; o.textContent=v; el.appendChild(o); });
-      };
-      const range = (s,e) => Array.from({length:e-s+1},(_,i)=>s+i);
-      fill(els.by, range(1960, 2025));
-      fill(els.bm, range(1, 12));
-      fill(els.gy, range(1970, 2030).map(y => y + "年3月"));
-      fill(els.dp, ["理数科","国際コミュニケーション学科","普通科"]);
-      fill(els.gender, ["男性","女性","回答しない"]);
-      fill(els.status, ["大学学部生","大学院生修士課程","大学院生博士課程","短期大学生","専門学校生等","大学校生","進学準備中","高校卒業後に就職","短期大学・専門学校等卒業後に就職","大学・大学校卒業後就職","大学院修了後に就職","その他"]);
-      fill(els.major, ["理学系","数学系","工学系","情報系","医歯薬看護系","農学系","教育系(理数系)","その他理系","人文社会科学系","法・政治・経済系","芸術系","その他文系","その他"]);
-      fill(els.job, ["公的機関の研究者","企業研究者","技術系公務員","医歯薬看護師","理数系教員","その他理系職種","文系職種","その他"]);
+    function fill(el, values, placeholder="選択してください") {
+      el.innerHTML = "";
+      const o0 = document.createElement("option");
+      o0.value = "";
+      o0.textContent = placeholder;
+      el.appendChild(o0);
+      values.forEach(v => {
+        const o = document.createElement("option");
+        o.value = String(v);
+        o.textContent = String(v);
+        el.appendChild(o);
+      });
     }
 
-    async function submit() {
-      for(let key in els) { if(!els[key].value){ alert("すべての項目を入力してください"); return; } }
-      document.getElementById("btn").disabled = true;
+    function range(min, max) {
+      const a = [];
+      for (let i = min; i <= max; i++) a.push(i);
+      return a;
+    }
+
+    function initUi() {
+      fill(els.by, range(1960, 2025));
+      fill(els.bm, range(1, 12));
+      fill(els.gy, range(1970, 2035));
+      fill(els.dp, ["理数科","国際コミュニケーション学科","普通科"]);
+
+      fill(els.gender, ["男性","女性","回答しない"]);
+      fill(els.status, [
+        "大学学部生","大学院生修士課程","大学院生博士課程","短期大学生","専門学校生等","大学校生","進学準備中",
+        "高校卒業後に就職","短期大学・専門学校等卒業後に就職","大学・大学校卒業後就職","大学院修了後に就職","その他"
+      ]);
+      fill(els.major, [
+        "理学系","数学系","工学系","情報系","医歯薬看護系","農学系","教育系(理数系)","その他理系",
+        "人文社会科学系","法・政治・経済系","芸術系","その他文系","その他"
+      ]);
+      fill(els.job, [
+        "公的機関の研究者","企業研究者","技術系公務員","医歯薬看護師","理数系教員","その他理系職種","文系職種","その他"
+      ]);
+    }
+
+    function allSelected() {
+      const keys = ["by","bm","gy","dp","gender","status","major","job"];
+      for (const k of keys) if (!els[k].value) return false;
+      return true;
+    }
+
+    async function initLiff() {
+      els.st.textContent = "LINEログイン確認中…";
+      await liff.init({ liffId: LIFF_ID });
+
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href });
+        return;
+      }
+      els.st.textContent = "準備完了。入力して送信してください。";
+    }
+
+    async function submitForm() {
+      if (!allSelected()) {
+        alert("すべての項目を選択してください。");
+        return;
+      }
+      els.btn.disabled = true;
+      els.st.textContent = "送信中…";
 
       try {
         const profile = await liff.getProfile();
+
         const params = new URLSearchParams();
         params.set("type", "liff_submit");
         params.set("userId", profile.userId);
-        params.set("displayName", profile.displayName);
-        for(let key in els) params.set(key, els[key].value);
+        params.set("displayName", profile.displayName || "");
 
-        await fetch(GAS_URL, { method:"POST", body: params });
+        // Code.gs 側のキーに合わせる（by/bm/gy/dp）
+        params.set("by", els.by.value);
+        params.set("bm", els.bm.value);
+        params.set("gy", els.gy.value);
+        params.set("dp", els.dp.value);
 
-        if (liff.isInClient()) {
-          // 4. トーク画面にメッセージ送信
-          await liff.sendMessages([{ type: 'text', text: 'アンケートの回答が完了しました！\nご協力ありがとうございました。' }]);
-          
-          // 4. 紹介（ShareTargetPicker）
-          if (liff.isApiAvailable('shareTargetPicker')) {
-            await liff.shareTargetPicker([{
-              "type": "flex", "altText": "おすすめのLINEボットを紹介します！",
-              "contents": {
-                "type": "bubble",
-                "body": { "type": "box", "layout": "vertical", "contents": [{ "type": "text", "text": "静岡北高校SSH", "weight": "bold", "color": "#00b900" },
-                                                                           { "type": "text", "text": "卒業生用 静北アカウントができました！", "wrap": true, "margin": "md" }
-                                                                           ] },            
-                "footer": { "type": "box", "layout": "vertical", "contents": [{ "type": "button", "style": "primary", "color": "#00b900", "action": { "type": "uri", "label": "友だち追加する", "uri": "https://line.me/R/ti/p/" + BOT_ID } }] }
-              }
-            }]);
-          }
-          // 5. 閉じる
-          liff.closeWindow();
+        params.set("gender", els.gender.value);
+        params.set("status", els.status.value);
+        params.set("major", els.major.value);
+        params.set("job", els.job.value);
+
+        const res = await fetch(GAS_URL, { method: "POST", body: params });
+        const text = await res.text();
+
+        let json = null;
+        try { json = JSON.parse(text); } catch (_) {}
+
+        if (!json || !json.ok) {
+          els.btn.disabled = false;
+          els.st.textContent = "送信失敗（サーバ応答が不正）。";
+          alert("送信に失敗しました。\n" + text);
+          return;
         }
-      } catch (e) { alert("エラー: " + e); }
+
+        els.st.textContent = "送信しました。ご協力ありがとうございました。";
+
+        // トークに「完了」メッセージを残す（必要なら）
+        if (liff.isInClient()) {
+          await liff.sendMessages([{ type: "text", text: "アンケートの回答が完了しました！\nご協力ありがとうございました。" }]);
+          liff.closeWindow();
+        } else {
+          alert("送信完了。LINEアプリ内で開くと自動で閉じます。");
+        }
+
+      } catch (e) {
+        els.btn.disabled = false;
+        els.st.textContent = "送信エラー。";
+        alert("エラー: " + e);
+      }
+    }
+
+    async function setupJstMode() {
+      els.form.style.display = "none";
+      els.jst.style.display = "block";
+      els.jstStatus.textContent = "";
+
+      els.jstBtn.onclick = () => {
+        // 外部ブラウザで開く（回答後にこのLIFFへ戻ってくる）
+        liff.openWindow({ url: JST_URL, external: true });
+      };
+
+      els.closeBtn.onclick = async () => {
+        try {
+          if (!liff.isInClient()) {
+            alert("LINEアプリ内で開いてください。");
+            return;
+          }
+          els.jstStatus.textContent = "トークに終了合図を送信中…";
+
+          // ★ここが要件の中核：この文言（終了）をBotが受け取ってNewsを起動する
+          await liff.sendMessages([{ type: "text", text: "JSTアンケート画面を終了しました。" }]);
+
+          els.jstStatus.textContent = "送信完了。ニュースを表示します。";
+          liff.closeWindow();
+
+        } catch (e) {
+          alert("送信に失敗しました。トーク画面で「終了しました」と送信してください。\n" + e);
+        }
+      };
     }
 
     window.onload = async () => {
-      await liff.init({ liffId: LIFF_ID });
-      if(!liff.isLoggedIn()) { liff.login(); return; }
+      // UIは先に構築
+      initUi();
 
+      // LIFF初期化
+      await initLiff();
+
+      // mode判定
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('mode') === 'jst') {
-        // 7. JSTアンケートモード
-        document.getElementById("formSection").style.display = "none";
-        document.getElementById("jstSection").style.display = "block";
-        document.getElementById("jstBtn").onclick = () => liff.openWindow({ url: JST_URL, external: true });
-        document.getElementById("closeBtn").onclick = async () => {
-          if (liff.isInClient()) {
-            // 8. 閉じる合図を送信 → これでSZK_Newsが起動
-            await liff.sendMessages([{ type: 'text', text: 'JSTアンケート画面を終了しました。' }]);
-            liff.closeWindow();
-          }
-        };
+      if (urlParams.get("mode") === "jst") {
+        await setupJstMode();
       } else {
-        initUi();
-        document.getElementById("btn").onclick = submit;
+        els.btn.onclick = submitForm;
       }
     };
   </script>
