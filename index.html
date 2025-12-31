@@ -118,8 +118,7 @@
   <div class="wrap">
     <div class="card">    
       <div class="note">
-        個人を特定せず、卒業生の調査をしています。卒業年／学科等を入力ください。生年月日ではなく、<b>生年月（年・月）</b>、<b>卒業年</b>、<b>学科</b>等を入力してください。<br>
-        すべて選択して「登録」を押してください。
+        本校の教育活動を評価するため、個人を特定せず、卒業生の調査をしています。生年月日ではなく、<b>生年月（年・月）</b>、<b>卒業年</b>、<b>学科</b>等を入力してください。<br>
       </div>
 
       <div class="grid">
@@ -161,7 +160,7 @@
         </div>
       </div>
 
-      <button id="btn" class="btn" type="button">登録</button>
+      <button id="btn" class="btn" type="button">送信</button>
 
       <div id="statusText" class="status">起動中…</div>
       <div class="footer">
@@ -172,10 +171,10 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     // ======= 必須設定（差し替え）=======
-var SpreadsheetID = '1orqFuZrX8bgHBwxyoJPYc4JSmTBFFvzHw7pBZ0jq_do';
+    var SpreadsheetID = '1orqFuZrX8bgHBwxyoJPYc4JSmTBFFvzHw7pBZ0jq_do';
 
-// Bot が follow 時に案内する LIFF URL に使う（https://liff.line.me/{LIFF_ID}）
-var LIFF_ID = '2008793146-jMVaCpQM';
+    // Bot が follow 時に案内する LIFF URL に使う（https://liff.line.me/{LIFF_ID}）
+    var LIFF_ID = '2008793146-jMVaCpQM';
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzmDYmds9e7z2f1iSI_pwCTA4e0dgrmoJMTSXUIrCkJ2Hqj00tmkyUpRZ_skSk6LHlPRQ/exec";
     // ==================================
 
@@ -242,7 +241,7 @@ var LIFF_ID = '2008793146-jMVaCpQM';
     function initUi(){
       fillSelect(byEl, range(BIRTH_YEAR_MIN, BIRTH_YEAR_MAX));
       fillSelect(bmEl, range(1, 12));
-      fillSelect(gyEl, range(GRAD_YEAR_MIN, GRAD_YEAR_MAX));
+      fillSelect(gyEl, range(GRAD_YEAR_MIN, GRAD_YEAR_MAX)+"年3月");
       fillSelect(dpEl, DEPTS);
 
       fillSelect(genderEl, GENDERS);
