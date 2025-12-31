@@ -49,11 +49,9 @@
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    // ======= 必須設定 =======
     const LIFF_ID = '2008793146-jMVaCpQM';
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwVyyIg4Rz7kw08zMFVwbRtqhNVLbp5k0_Om6hzcDNf3nR_3sGMrGBPGbp5XSSH29F5Vg/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby33rXqcogsxWq5Z6_uX5EZnN8tTqtGgOyWRsY41lgaE_yOsKTwZ-dOSSI0HZ8KHW6P5Q/exec";
     const BOT_ID = "@512stcdu";
-    // ========================
 
     const els = {
       by: document.getElementById("by"), bm: document.getElementById("bm"),
@@ -66,7 +64,6 @@
 
     function setStatus(msg, mode){ stEl.textContent = msg; stEl.className = "status " + (mode||""); }
 
-    // UI初期化
     function initUi(){
       const fill = (el, arr) => {
         el.innerHTML = '<option value="">選択してください</option>';
@@ -79,12 +76,11 @@
       fill(els.dp, ["理数科","国際コミュニケーション学科","普通科"]);
       fill(els.gender, ["男性","女性","回答しない"]);
       fill(els.status, ["大学学部生","大学院生修士課程","大学院生博士課程","短期大学生","専門学校生等","大学校生","進学準備中","高校卒業後に就職","短期大学・専門学校等卒業後に就職","大学・大学校卒業後就職","大学院修了後に就職","その他"]);
-      fill(els.major, ["理学系","数学系","工学系","情報系","医療系","農学系","教育系(理数系)","その他理系","人文社会科学系","法・政治・経済系","芸術系","その他文系","その他"]);
+      fill(els.major, ["理学系","数学系","工学系","情報系","医歯薬看護系","農学系","教育系(理数系)","その他理系","人文社会科学系","法・政治・経済系","芸術系","その他文系","その他"]);
       fill(els.job, ["公的機関の研究者","企業研究者","技術系公務員","医歯薬看護師","理数系教員","その他理系職種","文系職種","その他"]);
     }
 
     async function submit() {
-      // 1. バリデーション
       for(let key in els) { if(!els[key].value){ setStatus("すべての項目を選択してください", "ng"); return; } }
 
       btn.disabled = true;
@@ -95,15 +91,14 @@
         const params = new URLSearchParams();
         params.set("type", "liff_submit");
         params.set("userId", profile.userId);
+        params.set("displayName", profile.displayName);
         for(let key in els) params.set(key, els[key].value);
 
-        // 2. GASへデータ送信
         const res = await fetch(GAS_URL, { method:"POST", body: params });
         const data = await res.json();
-
         if(!data.ok) throw new Error(data.message);
 
-        // 3. トーク画面にメッセージを自動送信 (liff.sendMessages)
+        // トーク画面に完了メッセージを送信（これがGAS側のhandleLineEventをトリガーし、JSTアンケートを表示させます）
         if (liff.isInClient()) {
           await liff.sendMessages([{
             type: 'text',
@@ -111,7 +106,7 @@
           }]);
         }
 
-        // 4. 友達紹介（ターゲットピッカー）を起動
+        // 友達紹介
         if (liff.isApiAvailable('shareTargetPicker')) {
           await liff.shareTargetPicker([{
             "type": "flex",
