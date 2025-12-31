@@ -1,4 +1,3 @@
-<!-- index.html（LIFF画面: 回答フォーム + JSTモード） -->
 <!doctype html>
 <html lang="ja">
 <head>
@@ -51,7 +50,6 @@
 <body>
   <div class="wrap">
 
-    <!-- 通常フォーム -->
     <div id="formSection" class="card">
       <h1>卒業生の動向調査</h1>
       <p class="desc">
@@ -92,11 +90,10 @@
       <label for="job">職業</label>
       <select id="job"></select>
 
-      <button id="btn" type="button">送信する</button>
+      <button id="btn" type="button">回答を送信し、本校を紹介する</button>
       <div id="statusText" class="status">起動中…</div>
     </div>
 
-    <!-- JSTモード -->
     <div id="jstSection" class="card" style="display:none;">
       <h1>JST卒業生調査</h1>
       <p class="desc">
@@ -112,11 +109,10 @@
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    // ====== 設定（必須）======
     const LIFF_ID = "2008793146-jMVaCpQM";
-    const GAS_URL = "https://script.google.com/macros/s/AKfycby6AvyxiVqf4BL8OIb0J-_xpg3J2PHT75HIKN9SAMDWkJaiNQLTam4-OSpdJIJ5CvBUcg/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyvVfo8SfCaBpG8yYuKgOvnHZevlMA-cBfK4b6LE54VYb4zVmkptfxa0N6soVSKQMo5cA/exec";
     const JST_URL = "https://form2.jst.go.jp/s/r7_ssh_ishiki_sotugyou";
-    // =========================
+    const BOT_ID = "@512stcdu"; // 紹介用
 
     const els = {
       by: document.getElementById("by"),
@@ -159,21 +155,12 @@
     function initUi() {
       fill(els.by, range(1960, 2025));
       fill(els.bm, range(1, 12));
-      fill(els.gy, range(1970, 2035));
+      fill(els.gy, range(1970, 2035).map(y => y + "年3月"));
       fill(els.dp, ["理数科","国際コミュニケーション学科","普通科"]);
-
       fill(els.gender, ["男性","女性","回答しない"]);
-      fill(els.status, [
-        "大学学部生","大学院生修士課程","大学院生博士課程","短期大学生","専門学校生等","大学校生","進学準備中",
-        "高校卒業後に就職","短期大学・専門学校等卒業後に就職","大学・大学校卒業後就職","大学院修了後に就職","その他"
-      ]);
-      fill(els.major, [
-        "理学系","数学系","工学系","情報系","医歯薬看護系","農学系","教育系(理数系)","その他理系",
-        "人文社会科学系","法・政治・経済系","芸術系","その他文系","その他"
-      ]);
-      fill(els.job, [
-        "公的機関の研究者","企業研究者","技術系公務員","医歯薬看護師","理数系教員","その他理系職種","文系職種","その他"
-      ]);
+      fill(els.status, ["大学学部生","大学院生修士課程","大学院生博士課程","短期大学生","専門学校生等","大学校生","進学準備中","高校卒業後に就職","短期大学・専門学校等卒業後に就職","大学・大学校卒業後就職","大学院修了後に就職","その他"]);
+      fill(els.major, ["理学系","数学系","工学系","情報系","医歯薬看護系","農学系","教育系(理数系)","その他理系","人文社会科学系","法・政治・経済系","芸術系","その他文系","その他"]);
+      fill(els.job, ["公的機関の研究者","企業研究者","技術系公務員","医歯薬看護師","理数系教員","その他理系職種","文系職種","その他"]);
     }
 
     function allSelected() {
@@ -185,7 +172,6 @@
     async function initLiff() {
       els.st.textContent = "LINEログイン確認中…";
       await liff.init({ liffId: LIFF_ID });
-
       if (!liff.isLoggedIn()) {
         liff.login({ redirectUri: window.location.href });
         return;
@@ -194,27 +180,20 @@
     }
 
     async function submitForm() {
-      if (!allSelected()) {
-        alert("すべての項目を選択してください。");
-        return;
-      }
+      if (!allSelected()) { alert("すべての項目を選択してください。"); return; }
       els.btn.disabled = true;
       els.st.textContent = "送信中…";
 
       try {
         const profile = await liff.getProfile();
-
         const params = new URLSearchParams();
         params.set("type", "liff_submit");
         params.set("userId", profile.userId);
         params.set("displayName", profile.displayName || "");
-
-        // Code.gs 側のキーに合わせる（by/bm/gy/dp）
         params.set("by", els.by.value);
         params.set("bm", els.bm.value);
-        params.set("gy", els.gy.value);
+        params.set("gy", els.gy.value.replace("年3月",""));
         params.set("dp", els.dp.value);
-
         params.set("gender", els.gender.value);
         params.set("status", els.status.value);
         params.set("major", els.major.value);
@@ -222,78 +201,53 @@
 
         const res = await fetch(GAS_URL, { method: "POST", body: params });
         const text = await res.text();
-
         let json = null;
         try { json = JSON.parse(text); } catch (_) {}
 
         if (!json || !json.ok) {
           els.btn.disabled = false;
-          els.st.textContent = "送信失敗（サーバ応答が不正）。";
           alert("送信に失敗しました。\n" + text);
           return;
         }
 
-        els.st.textContent = "送信しました。ご協力ありがとうございました。";
+        // 本校を紹介する機能（ShareTargetPicker）
+        if (liff.isApiAvailable('shareTargetPicker')) {
+          await liff.shareTargetPicker([{
+            "type": "flex", "altText": "おすすめのLINEボットを紹介します！",
+            "contents": {
+              "type": "bubble",
+              "body": { "type": "box", "layout": "vertical", "contents": [{ "type": "text", "text": "静岡北高校SSH", "weight": "bold", "color": "#00b900" }, { "type": "text", "text": "卒業生用 静北アカウントができました！", "wrap": true, "margin": "md" }] },
+              "footer": { "type": "box", "layout": "vertical", "contents": [{ "type": "button", "style": "primary", "color": "#00b900", "action": { "type": "uri", "label": "友だち追加する", "uri": "https://line.me/R/ti/p/" + BOT_ID } }] }
+            }
+          }]);
+        }
 
-        // トークに「完了」メッセージを残す（必要なら）
         if (liff.isInClient()) {
           await liff.sendMessages([{ type: "text", text: "アンケートの回答が完了しました！\nご協力ありがとうございました。" }]);
           liff.closeWindow();
-        } else {
-          alert("送信完了。LINEアプリ内で開くと自動で閉じます。");
         }
-
-      } catch (e) {
-        els.btn.disabled = false;
-        els.st.textContent = "送信エラー。";
-        alert("エラー: " + e);
-      }
+      } catch (e) { alert("エラー: " + e); els.btn.disabled = false; }
     }
 
     async function setupJstMode() {
       els.form.style.display = "none";
       els.jst.style.display = "block";
-      els.jstStatus.textContent = "";
-
-      els.jstBtn.onclick = () => {
-        // 外部ブラウザで開く（回答後にこのLIFFへ戻ってくる）
-        liff.openWindow({ url: JST_URL, external: true });
-      };
-
+      els.jstBtn.onclick = () => liff.openWindow({ url: JST_URL, external: true });
       els.closeBtn.onclick = async () => {
         try {
-          if (!liff.isInClient()) {
-            alert("LINEアプリ内で開いてください。");
-            return;
-          }
-          els.jstStatus.textContent = "トークに終了合図を送信中…";
-
-          // ★ここが要件の中核：この文言（終了）をBotが受け取ってNewsを起動する
+          if (!liff.isInClient()) return;
           await liff.sendMessages([{ type: "text", text: "JSTアンケート画面を終了しました。" }]);
-
-          els.jstStatus.textContent = "送信完了。ニュースを表示します。";
           liff.closeWindow();
-
-        } catch (e) {
-          alert("送信に失敗しました。トーク画面で「終了しました」と送信してください。\n" + e);
-        }
+        } catch (e) { alert("送信失敗。トークで「終了しました」と送ってください。"); }
       };
     }
 
     window.onload = async () => {
-      // UIは先に構築
       initUi();
-
-      // LIFF初期化
       await initLiff();
-
-      // mode判定
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("mode") === "jst") {
-        await setupJstMode();
-      } else {
-        els.btn.onclick = submitForm;
-      }
+      if (urlParams.get("mode") === "jst") { await setupJstMode(); } 
+      else { els.btn.onclick = submitForm; }
     };
   </script>
 </body>
