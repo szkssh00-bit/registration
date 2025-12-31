@@ -25,15 +25,13 @@
     .status{ margin-top: 12px; font-size: 13px; white-space: pre-wrap; }
     .status.ok{ color: var(--ok); }
     .status.ng{ color: var(--danger); }
-    .message{ margin-top: 12px; font-size: 13px; white-space: pre-wrap; }
-
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <h1>卒業生アンケート</h1>
-      <div class="note">回答内容は統計的に処理され、個人を特定することはありません。</div>
+      <div class="note">回答内容は統計的に処理されるため、個人を特定することはありません。</div>
       <div class="grid">
         <div><label>生年</label><select id="by"></select></div>
         <div><label>生月</label><select id="bm"></select></div>
@@ -45,7 +43,6 @@
         <div class="full"><label>職業</label><select id="job"></select></div>
       </div>
       <button id="btn" class="btn">回答を送信し、本校を卒業生に紹介</button>
-      <div id="message" class="message">卒業生と広く繋がるため、このアカウントを紹介してください。</div>
       <div id="statusText" class="status">起動中…</div>
     </div>
   </div>
@@ -53,7 +50,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     const LIFF_ID = '2008793146-jMVaCpQM';
-    const GAS_URL = "https://script.google.com/macros/s/AKfycby33rXqcogsxWq5Z6_uX5EZnN8tTqtGgOyWRsY41lgaE_yOsKTwZ-dOSSI0HZ8KHW6P5Q/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxE8xHwzuDVjAg1ZlPhrYYYM1894ZnzkyOi6H8a0dpza0R9N2sKHvCX85SS8Hfilos-dA/exec";
     const BOT_ID = "@512stcdu";
 
     const els = {
@@ -85,7 +82,6 @@
 
     async function submit() {
       for(let key in els) { if(!els[key].value){ setStatus("すべての項目を選択してください", "ng"); return; } }
-
       btn.disabled = true;
       setStatus("送信中...");
 
@@ -101,19 +97,15 @@
         const data = await res.json();
         if(!data.ok) throw new Error(data.message);
 
-        // トーク画面に完了メッセージを送信（これがGAS側のhandleLineEventをトリガーし、JSTアンケートを表示させます）
         if (liff.isInClient()) {
           await liff.sendMessages([{
-            type: 'text',
-            text: 'アンケートの回答が完了しました！\nご協力ありがとうございました。'
+            type: 'text', text: 'アンケートの回答が完了しました！\nご協力ありがとうございました。'
           }]);
         }
 
-        // 友達紹介
         if (liff.isApiAvailable('shareTargetPicker')) {
           await liff.shareTargetPicker([{
-            "type": "flex",
-            "altText": "おすすめのLINEボットを紹介します！",
+            "type": "flex", "altText": "おすすめのLINEボットを紹介します！",
             "contents": {
               "type": "bubble",
               "body": {
@@ -136,7 +128,6 @@
 
         setStatus("完了しました！画面を閉じます。", "ok");
         setTimeout(() => { if(liff.isInClient()) liff.closeWindow(); }, 1500);
-
       } catch (e) {
         setStatus("エラー: " + e.message, "ng");
         btn.disabled = false;
