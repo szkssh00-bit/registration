@@ -3,48 +3,49 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>アンケートシステム</title>
+  <title>調査システム</title>
   <style>
     :root{ --line:#00b900; --bg:#f6f7f9; --card:#ffffff; --text:#222; --border:#e5e7eb; --radius: 14px; }
     body{ font-family: system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-    .wrap{ max-width: 680px; margin: 0 auto; padding: 20px 14px; }
-    .card{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .wrap{ max-width: 680px; margin: 0 auto; padding: 18px 14px; }
+    .card{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     h1{ font-size: 18px; margin: 0 0 15px; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
-    .btn{ width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--line); color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
-    .jst-link { display: block; text-align: center; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold; }
-    select, input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); box-sizing: border-box; }
-    label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px; }
+    .btn{ width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--line); color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; }
+    select, input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid var(--border); box-sizing: border-box; font-size: 15px; }
+    label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px; color: #555; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div id="mainForm" class="card">
+    <div id="formSection" class="card">
       <h1>卒業生の動向調査</h1>
-      <div id="formContent">
-        <label>生年</label><select id="by"></select>
-        <label>生月</label><select id="bm"></select>
-        <label>卒業年</label><select id="gy"></select>
-        <label>学科</label><select id="dp"></select>
-        <label>性別</label><select id="gender"></select>
-        <label>現在の状況</label><select id="status"></select>
-        <label>専攻分野</label><select id="major"></select>
-        <label>職業</label><select id="job"></select>
-        <button id="btn" class="btn">送信して次へ</button>
-      </div>
+      <label>生年</label><select id="by"></select>
+      <label>生月</label><select id="bm"></select>
+      <label>卒業年</label><select id="gy"></select>
+      <label>学科</label><select id="dp"></select>
+      <label>性別</label><select id="gender"></select>
+      <label>現在の状況</label><select id="status"></select>
+      <label>専攻分野</label><select id="major"></select>
+      <label>職業</label><select id="job"></select>
+      <button id="btn" class="btn">回答を送信し、本校を紹介</button>
     </div>
 
-    <div id="jstArea" class="card" style="display:none;">
+    <div id="jstSection" class="card" style="display:none;">
       <h1>JST卒業生調査</h1>
-      <p style="font-size:14px; line-height:1.6;">外部サイト（JST）のアンケートページを開きます。回答後、この画面を閉じてください。</p>
-      <button id="jstBtn" class="btn">アンケートサイトを開く</button>
-      <button id="closeBtn" class="btn" style="background:#666; margin-top:20px;">回答完了して閉じる</button>
+      <p style="font-size:14px; line-height:1.6; margin-bottom:20px;">
+        外部サイト（JST）のアンケートページを開きます。回答が完了しましたら、下のボタンを押して終了してください。
+      </p>
+      <button id="jstBtn" class="btn" style="background:#007bff; margin-bottom:15px;">JST調査サイトを開く</button>
+      <button id="closeBtn" class="btn" style="background:#666;">終了してニュースを見る</button>
     </div>
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     const LIFF_ID = '2008793146-jMVaCpQM';
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwwFGnUaMDZwTkmCWlYNDmyHErYBkhXf1ROCyLn1jF7nJ_GIMpzrElXQEXZqS3n-Lueow/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxYfZ_8f-tdotSo4vGKjDoVvEkDKR4S3JM9efb18royJkp2GdQzURoQo3Qb5xFFklTIPA/exec";
+    const BOT_ID = "@512stcdu";
+    const JST_URL = "https://form2.jst.go.jp/s/r7_ssh_ishiki_sotugyou";
 
     const els = {
       by: document.getElementById("by"), bm: document.getElementById("bm"),
@@ -55,7 +56,7 @@
 
     function initUi(){
       const fill = (el, arr) => {
-        el.innerHTML = '<option value="">選択してください</option>';
+        el.innerHTML = '<option value="">選択</option>';
         arr.forEach(v => { const o = document.createElement("option"); o.value=v; o.textContent=v; el.appendChild(o); });
       };
       const range = (s,e) => Array.from({length:e-s+1},(_,i)=>s+i);
@@ -70,7 +71,7 @@
     }
 
     async function submit() {
-      for(let key in els) { if(!els[key].value){ alert("全項目入力してください"); return; } }
+      for(let key in els) { if(!els[key].value){ alert("すべての項目を入力してください"); return; } }
       document.getElementById("btn").disabled = true;
 
       try {
@@ -84,10 +85,24 @@
         await fetch(GAS_URL, { method:"POST", body: params });
 
         if (liff.isInClient()) {
+          // 4. トーク画面にメッセージ送信
           await liff.sendMessages([{ type: 'text', text: 'アンケートの回答が完了しました！\nご協力ありがとうございました。' }]);
+          
+          // 4. 紹介（ShareTargetPicker）
+          if (liff.isApiAvailable('shareTargetPicker')) {
+            await liff.shareTargetPicker([{
+              "type": "flex", "altText": "おすすめのLINEボットを紹介します！",
+              "contents": {
+                "type": "bubble",
+                "body": { "type": "box", "layout": "vertical", "contents": [{ "type": "text", "text": "静岡北高校SSH", "weight": "bold", "color": "#00b900" }] },
+                "footer": { "type": "box", "layout": "vertical", "contents": [{ "type": "button", "style": "primary", "color": "#00b900", "action": { "type": "uri", "label": "友だち追加する", "uri": "https://line.me/R/ti/p/" + BOT_ID } }] }
+              }
+            }]);
+          }
+          // 5. 閉じる
           liff.closeWindow();
         }
-      } catch (e) { alert(e); }
+      } catch (e) { alert("エラー: " + e); }
     }
 
     window.onload = async () => {
@@ -95,21 +110,15 @@
       if(!liff.isLoggedIn()) { liff.login(); return; }
 
       const urlParams = new URLSearchParams(window.location.search);
-      const targetUrl = urlParams.get('url');
-
-      // JSTアンケートモードの表示切り替え
-      if (targetUrl) {
-        document.getElementById("mainForm").style.display = "none";
-        document.getElementById("jstArea").style.display = "block";
-        
-        document.getElementById("jstBtn").onclick = () => {
-          liff.openWindow({ url: targetUrl, external: true });
-        };
-
+      if (urlParams.get('mode') === 'jst') {
+        // 7. JSTアンケートモード
+        document.getElementById("formSection").style.display = "none";
+        document.getElementById("jstSection").style.display = "block";
+        document.getElementById("jstBtn").onclick = () => liff.openWindow({ url: JST_URL, external: true });
         document.getElementById("closeBtn").onclick = async () => {
           if (liff.isInClient()) {
-            // 5項：LIFFを閉じる際にメッセージを送り、GAS側のhandleNewsを起動させる
-            await liff.sendMessages([{ type: 'text', text: 'JSTアンケート画面を閉じました。' }]);
+            // 8. 閉じる合図を送信 → これでSZK_Newsが起動
+            await liff.sendMessages([{ type: 'text', text: 'JSTアンケート画面を終了しました。' }]);
             liff.closeWindow();
           }
         };
