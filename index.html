@@ -25,6 +25,8 @@
     .status{ margin-top: 12px; font-size: 13px; white-space: pre-wrap; }
     .status.ok{ color: var(--ok); }
     .status.ng{ color: var(--danger); }
+    .message{ margin-top: 12px; font-size: 13px; white-space: pre-wrap; }
+
   </style>
 </head>
 <body>
@@ -43,6 +45,7 @@
         <div class="full"><label>職業</label><select id="job"></select></div>
       </div>
       <button id="btn" class="btn">回答を送信し、本校を卒業生に紹介</button>
+      <div id="message" class="message">卒業生と広く繋がるため、このアカウントを紹介してください。</div>
       <div id="statusText" class="status">起動中…</div>
     </div>
   </div>
