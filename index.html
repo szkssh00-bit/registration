@@ -257,13 +257,13 @@
             alert("LINEアプリ内で開いてください。");
             return;
           }
-          els.jstStatus.textContent = "終了合図を送信中…";
+          els.jstStatus.textContent = "終了中…";
           await liff.sendMessages([{ type: "text", text: "JSTアンケート画面を終了しました。" }]);
 
           // JST終了後にも紹介を出す（希望があれば有効化）
-          if (liff.isApiAvailable('shareTargetPicker')) {
-            await liff.shareTargetPicker(buildShareFlex());
-          }
+//          if (liff.isApiAvailable('shareTargetPicker')) {
+ //           await liff.shareTargetPicker(buildShareFlex());
+ //         }
 
           els.jstStatus.textContent = "送信完了。画面を閉じます。";
           setTimeout(() => liff.closeWindow(), 800);
